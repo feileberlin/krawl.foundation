@@ -14,9 +14,11 @@
 #
 # Voraussetzungen:
 #   - Repository Settings > Pages > Source: "GitHub Actions"
-#   - NICHT "Deploy from a branch"
+#   - NICHT "Deploy from a branch"  
 #
 # ============================================================================
+
+# 20251121151800 deplying this workflowagain from Github Frontend SCS
 
 name: Deploy to GitHub Pages
 
