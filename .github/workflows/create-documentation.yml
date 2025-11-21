@@ -30,7 +30,7 @@ jobs:
       - uses: actions/checkout@v4
       
       - name: Create NOTIFICATION_SETUP.md
-        if: github.event.inputs.doc_type == 'all' || github.event.inputs.doc_type == 'notification-setup'
+        if: inputs.doc_type == 'all' || inputs.doc_type == 'notification-setup'
         run: |
           mkdir -p docs
           cat > docs/NOTIFICATION_SETUP.md << 'DOC_EOF'
@@ -102,7 +102,7 @@ DOC_EOF
           echo "✅ Created NOTIFICATION_SETUP.md"
       
       - name: Create EDITORIAL_WORKFLOW.md
-        if: github.event.inputs.doc_type == 'all' || github.event.inputs.doc_type == 'editorial-workflow'
+        if: inputs.doc_type == 'all' || inputs.doc_type == 'editorial-workflow'
         run: |
           mkdir -p docs
           cat > docs/EDITORIAL_WORKFLOW.md << 'DOC_EOF'
@@ -194,7 +194,7 @@ DOC_EOF
           echo "✅ Created EDITORIAL_WORKFLOW.md"
       
       - name: Create sessions/README.md
-        if: github.event.inputs.doc_type == 'all' || github.event.inputs.doc_type == 'sessions-readme'
+        if: inputs.doc_type == 'all' || inputs.doc_type == 'sessions-readme'
         run: |
           mkdir -p docs/sessions
           cat > docs/sessions/README.md << 'DOC_EOF'
@@ -267,7 +267,7 @@ DOC_EOF
             echo "No changes to commit"
           else
             git commit -m "docs: Create documentation via GitHub Actions" \
-              -m "Created: ${{ github.event.inputs.doc_type }}"
+              -m "Created: ${{ inputs.doc_type }}"
             git push
             
             echo "✅ Documentation created and pushed!"
@@ -277,10 +277,10 @@ DOC_EOF
         run: |
           echo "### 📚 Documentation Created" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Type: **${{ github.event.inputs.doc_type }}**" >> $GITHUB_STEP_SUMMARY
+          echo "Type: **${{ inputs.doc_type }}**" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
-          if [ "${{ github.event.inputs.doc_type }}" == "all" ]; then
+          if [ "${{ inputs.doc_type }}" == "all" ]; then
             echo "Created files:" >> $GITHUB_STEP_SUMMARY
             echo "- docs/NOTIFICATION_SETUP.md" >> $GITHUB_STEP_SUMMARY
             echo "- docs/EDITORIAL_WORKFLOW.md" >> $GITHUB_STEP_SUMMARY

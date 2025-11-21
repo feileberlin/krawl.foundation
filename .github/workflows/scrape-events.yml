@@ -73,9 +73,9 @@ jobs:
           python3 cli/scrapers/galeriehaus_hof_facebook.py || echo "⚠️  Facebook scraping failed"
       
       - name: Generate test events (if requested via manual trigger)
-        if: ${{ github.event.inputs.event_count != '0' && github.event.inputs.event_count != '' }}
+        if: ${{ inputs.event_count != '0' && inputs.event_count != '' }}
         run: |
-          COUNT=${{ github.event.inputs.event_count }}
+          COUNT=${{ inputs.event_count }}
           echo "Generating $COUNT test events..."
           ./cli/event_scraper.py generate --count $COUNT --output-dir _events
       
@@ -128,12 +128,12 @@ jobs:
           echo "- **New Events:** ${{ steps.list_events.outputs.new_events }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Total Events:** $(./cli/event_scraper.py list --format json | jq '. | length')" >> $GITHUB_STEP_SUMMARY
           
-          if [ "${{ github.event.inputs.source_url }}" != "" ]; then
-            echo "- **Source URL:** ${{ github.event.inputs.source_url }}" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ inputs.source_url }}" != "" ]; then
+            echo "- **Source URL:** ${{ inputs.source_url }}" >> $GITHUB_STEP_SUMMARY
           fi
           
-          if [ "${{ github.event.inputs.event_count }}" != "0" ]; then
-            echo "- **Generated:** ${{ github.event.inputs.event_count }} test events" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ inputs.event_count }}" != "0" ]; then
+            echo "- **Generated:** ${{ inputs.event_count }} test events" >> $GITHUB_STEP_SUMMARY
           fi
   
   # Trigger Draft Alerts if new drafts were created
