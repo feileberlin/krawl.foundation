@@ -1,0 +1,604 @@
+name: Bootstrap Missing Workflows
+
+on:
+  workflow_dispatch:
+    inputs:
+      workflows:
+        description: 'Which workflows to create?'
+        required: true
+        type: choice
+        options:
+          - 'all'
+          - 'auto-export-chat'
+          - 'notify-pending-drafts'
+          - 'create-documentation'
+        default: 'all'
+
+permissions:
+  contents: write
+
+jobs:
+  create-workflows:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Create auto-export-chat.yml
+        if: github.event.inputs.workflows == 'all' || github.event.inputs.workflows == 'auto-export-chat'
+        run: |
+          cat > .github/workflows/auto-export-chat.yml << 'WORKFLOW_EOF'
+          name: Auto-Export Chat Sessions
+
+          on:
+            schedule:
+              - cron: '0 */6 * * *'
+            workflow_dispatch:
+              inputs:
+                source:
+                  description: 'Export Source'
+                  type: choice
+                  options:
+                    - 'github-issues'
+                    - 'manual-file'
+                  default: 'github-issues'
+
+          permissions:
+            contents: write
+            issues: read
+
+          jobs:
+            export-chat:
+              runs-on: ubuntu-latest
+              
+              steps:
+                - uses: actions/checkout@v4
+                
+                - uses: actions/setup-python@v5
+                  with:
+                    python-version: '3.11'
+                    cache: 'pip'
+                
+                - name: Install dependencies
+                  run: |
+                    pip install markdown reportlab pypdf beautifulsoup4 lxml pyyaml
+                    sudo apt-get install -y ghostscript poppler-utils
+                
+                - name: Generate timestamp
+                  id: timestamp
+                  run: |
+                    echo "datetime=$(date +%Y-%m-%d-%H%M)" >> $GITHUB_OUTPUT
+                    echo "iso=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_OUTPUT
+                
+                - name: Export from GitHub Issues
+                  env:
+                    GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  run: |
+                    gh issue list \
+                      --label "chat-export" \
+                      --state open \
+                      --json number,title,body,createdAt,author \
+                      --jq '.[] | "# \(.title)\n\n**Author:** \(.author.login)\n\n\(.body)\n\n---\n\n"' \
+                      > chat-raw.md || echo "# No content" > chat-raw.md
+                
+                - name: Check content
+                  id: check
+                  run: |
+                    if [ -s chat-raw.md ] && [ $(wc -l < chat-raw.md) -gt 5 ]; then
+                      echo "has_content=true" >> $GITHUB_OUTPUT
+                    else
+                      echo "has_content=false" >> $GITHUB_OUTPUT
+                    fi
+                
+                - name: Convert to PDF/A
+                  if: steps.check.outputs.has_content == 'true'
+                  run: |
+                    mkdir -p docs/sessions
+                    
+                    python scripts/export_chat.py chat-raw.md \
+                      -o "docs/sessions/session-${{ steps.timestamp.outputs.datetime }}.pdf" \
+                      --title "Auto Export ${{ steps.timestamp.outputs.datetime }}" \
+                      --author "${{ github.repository_owner }}" \
+                      --format pdf
+                    
+                    gs -dPDFA=1 -dBATCH -dNOPAUSE \
+                       -sProcessColorModel=DeviceRGB \
+                       -sDEVICE=pdfwrite \
+                       -sPDFACompatibilityPolicy=1 \
+                       -sOutputFile="docs/sessions/session-${{ steps.timestamp.outputs.datetime }}-PDFA.pdf" \
+                       "docs/sessions/session-${{ steps.timestamp.outputs.datetime }}.pdf"
+                    
+                    rm "docs/sessions/session-${{ steps.timestamp.outputs.datetime }}.pdf"
+                
+                - name: Commit
+                  if: steps.check.outputs.has_content == 'true'
+                  run: |
+                    git config user.name "github-actions[bot]"
+                    git config user.email "github-actions[bot]@users.noreply.github.com"
+                    git add docs/sessions/
+                    git commit -m "docs: Auto-export chat ${{ steps.timestamp.outputs.datetime }}" || true
+                    git push
+                
+                - name: Summary
+                  if: always()
+                  run: |
+                    echo "### 📊 Chat Export Summary" >> $GITHUB_STEP_SUMMARY
+                    if [ "${{ steps.check.outputs.has_content }}" == "true" ]; then
+                      echo "✅ Export successful" >> $GITHUB_STEP_SUMMARY
+                    else
+                      echo "⚠️ No content to export" >> $GITHUB_STEP_SUMMARY
+                    fi
+          WORKFLOW_EOF
+          
+          echo "✅ Created auto-export-chat.yml"
+      
+      - name: Create notify-pending-drafts.yml
+        if: github.event.inputs.workflows == 'all' || github.event.inputs.workflows == 'notify-pending-drafts'
+        run: |
+          cat > .github/workflows/notify-pending-drafts.yml << 'WORKFLOW_EOF'
+          name: Notify Pending Draft Events
+
+          on:
+            schedule:
+              - cron: '0 */6 * * *'
+            workflow_dispatch:
+              inputs:
+                threshold_hours:
+                  description: 'Alert threshold (hours)'
+                  type: number
+                  default: 6
+
+          permissions:
+            contents: read
+            issues: write
+
+          jobs:
+            check-drafts:
+              runs-on: ubuntu-latest
+              
+              steps:
+                - uses: actions/checkout@v4
+                
+                - uses: actions/setup-python@v5
+                  with:
+                    python-version: '3.11'
+                
+                - name: Check pending drafts
+                  id: check
+                  run: |
+                    python3 << 'EOF'
+                    import json, os
+                    from pathlib import Path
+                    from datetime import datetime, timedelta, timezone
+                    
+                    THRESHOLD = int("${{ github.event.inputs.threshold_hours || '6' }}")
+                    drafts = []
+                    now = datetime.now(timezone.utc)
+                    
+                    events_dir = Path("_events")
+                    if events_dir.exists():
+                        for f in events_dir.glob("*.json"):
+                            try:
+                                event = json.load(open(f))
+                                if event.get('status', '').lower() != 'draft':
+                                    continue
+                                
+                                if 'created_at' in event:
+                                    created = datetime.fromisoformat(event['created_at'].replace('Z', '+00:00'))
+                                else:
+                                    created = datetime.fromtimestamp(f.stat().st_mtime, tz=timezone.utc)
+                                
+                                age = now - created
+                                if age > timedelta(hours=THRESHOLD):
+                                    drafts.append({
+                                        'file': f.name,
+                                        'title': event.get('title', 'Untitled'),
+                                        'venue': event.get('venue', 'Unknown'),
+                                        'date': event.get('date', 'Unknown'),
+                                        'age_hours': int(age.total_seconds() / 3600)
+                                    })
+                            except: pass
+                    
+                    drafts.sort(key=lambda x: x['age_hours'], reverse=True)
+                    
+                    with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+                        f.write(f"has_drafts={'true' if drafts else 'false'}\n")
+                        f.write(f"count={len(drafts)}\n")
+                    
+                    if drafts:
+                        with open('drafts.json', 'w') as f:
+                            json.dump(drafts, f, indent=2)
+                        print(f"Found {len(drafts)} pending drafts")
+                    EOF
+                
+                - name: Create GitHub issue
+                  if: steps.check.outputs.has_drafts == 'true'
+                  uses: actions/github-script@v7
+                  with:
+                    script: |
+                      const fs = require('fs');
+                      const drafts = JSON.parse(fs.readFileSync('drafts.json'));
+                      
+                      // Close old notifications
+                      const { data: issues } = await github.rest.issues.listForRepo({
+                        owner: context.repo.owner,
+                        repo: context.repo.repo,
+                        labels: 'draft-pending',
+                        state: 'open'
+                      });
+                      
+                      for (const issue of issues) {
+                        await github.rest.issues.update({
+                          owner: context.repo.owner,
+                          repo: context.repo.repo,
+                          issue_number: issue.number,
+                          state: 'closed'
+                        });
+                      }
+                      
+                      let body = `## ⚠️ ${drafts.length} Draft Events Pending\n\n`;
+                      for (const d of drafts) {
+                        body += `### 🎫 ${d.title}\n`;
+                        body += `- Venue: ${d.venue}\n`;
+                        body += `- Date: ${d.date}\n`;
+                        body += `- File: \`${d.file}\`\n`;
+                        body += `- Age: **${d.age_hours} hours** ⏰\n\n`;
+                      }
+                      body += `\n## Actions\n\`\`\`bash\n./cli/event_scraper.py bulk --set-field status reviewed\n\`\`\``;
+                      
+                      await github.rest.issues.create({
+                        owner: context.repo.owner,
+                        repo: context.repo.repo,
+                        title: `⚠️ ${drafts.length} Draft Events Pending Review`,
+                        body: body,
+                        labels: ['draft-pending', 'editorial', 'priority-high'],
+                        assignees: [context.repo.owner]
+                      });
+                
+                - name: Summary
+                  if: always()
+                  run: |
+                    echo "### 📊 Draft Check Summary" >> $GITHUB_STEP_SUMMARY
+                    if [ "${{ steps.check.outputs.has_drafts }}" == "true" ]; then
+                      echo "⚠️ ${steps.check.outputs.count} drafts pending" >> $GITHUB_STEP_SUMMARY
+                    else
+                      echo "✅ No pending drafts" >> $GITHUB_STEP_SUMMARY
+                    fi
+          WORKFLOW_EOF
+          
+          echo "✅ Created notify-pending-drafts.yml"
+      
+      - name: Create create-documentation.yml
+        if: github.event.inputs.workflows == 'all' || github.event.inputs.workflows == 'create-documentation'
+        run: |
+          cat > .github/workflows/create-documentation.yml << 'WORKFLOW_EOF'
+          name: Create Documentation Files
+
+          on:
+            workflow_dispatch:
+              inputs:
+                doc_type:
+                  description: 'Documentation to create'
+                  required: true
+                  type: choice
+                  options:
+                    - 'all'
+                    - 'notification-setup'
+                    - 'editorial-workflow'
+                    - 'sessions-readme'
+                  default: 'all'
+
+          permissions:
+            contents: write
+
+          jobs:
+            create-docs:
+              runs-on: ubuntu-latest
+              
+              steps:
+                - uses: actions/checkout@v4
+                
+                - name: Create NOTIFICATION_SETUP.md
+                  if: github.event.inputs.doc_type == 'all' || github.event.inputs.doc_type == 'notification-setup'
+                  run: |
+                    mkdir -p docs
+                    cat > docs/NOTIFICATION_SETUP.md << 'DOC_EOF'
+          # 📧 Email Notifications Setup
+
+          Guide zum Einrichten von Email-Benachrichtigungen für wartende Draft-Events.
+
+          ## 🎯 Was wird benachrichtigt?
+
+          **Draft Events** die länger als **6 Stunden** auf Review warten:
+          - 📝 GitHub Issue mit Details
+          - 🔔 Automatische Assignment an Owner
+          - ⏰ Check alle 6 Stunden
+
+          ---
+
+          ## 🚀 Quick Setup
+
+          Der Workflow ist bereits konfiguriert! Keine weiteren Schritte nötig.
+
+          **Was passiert automatisch:**
+          1. Workflow läuft alle 6 Stunden
+          2. Scannt `_events/*.json` nach Drafts
+          3. Prüft Alter > 6 Stunden
+          4. Erstellt GitHub Issue bei Bedarf
+          5. Assigned Issue an Repository Owner
+
+          ---
+
+          ## 📊 Monitoring
+
+          ```bash
+          # Workflow-Status prüfen
+          gh run list --workflow=notify-pending-drafts.yml
+
+          # Pending Draft Issues
+          gh issue list --label "draft-pending"
+
+          # Manuelle Ausführung
+          gh workflow run notify-pending-drafts.yml
+          ```
+
+          ---
+
+          ## 🔧 Customization
+
+          ### Threshold ändern
+
+          ```bash
+          gh workflow run notify-pending-drafts.yml \
+            --field threshold_hours=12  # 12 statt 6 Stunden
+          ```
+
+          ### Schedule anpassen
+
+          Edit `.github/workflows/notify-pending-drafts.yml`:
+
+          ```yaml
+          schedule:
+            - cron: '0 */3 * * *'  # Alle 3 Stunden
+            - cron: '0 9,13,17 * * 1-5'  # 3x täglich (Arbeitszeit)
+          ```
+
+          ---
+
+          **Last Updated:** 2025-11-21
+          DOC_EOF
+                    
+                    echo "✅ Created NOTIFICATION_SETUP.md"
+                
+                - name: Create EDITORIAL_WORKFLOW.md
+                  if: github.event.inputs.doc_type == 'all' || github.event.inputs.doc_type == 'editorial-workflow'
+                  run: |
+                    mkdir -p docs
+                    cat > docs/EDITORIAL_WORKFLOW.md << 'DOC_EOF'
+          # 📝 Editorial Workflow
+
+          Event-Review und Publishing-Prozess für krawl.foundation.
+
+          ## 🔄 Status-Flow
+
+          ```
+          draft → reviewed → published
+          ```
+
+          ---
+
+          ## 📋 Workflow Steps
+
+          ### 1. **Draft erstellt** (automatisch)
+
+          - Scraper findet neues Event
+          - Status: `draft`
+          - Notification nach 6h
+
+          ### 2. **Review** (manuell)
+
+          ```bash
+          # Alle Drafts anzeigen
+          ./cli/event_scraper.py list --format table
+
+          # Event öffnen und prüfen
+          vim _events/2025-12-01-event.json
+
+          # Status updaten
+          ./cli/event_scraper.py bulk \
+            --filter "file=2025-12-01-event.json" \
+            --set-field status reviewed
+          ```
+
+          **Check:**
+          - ✅ Titel korrekt?
+          - ✅ Datum & Zeit richtig?
+          - ✅ Venue & Location vorhanden?
+          - ✅ Bild-URL funktioniert?
+          - ✅ Beschreibung sinnvoll?
+
+          ### 3. **Publish** (manuell)
+
+          ```bash
+          # Event publishen
+          ./cli/event_scraper.py bulk \
+            --filter "status=reviewed" \
+            --set-field status published
+
+          # Commit & Push
+          git add _events/
+          git commit -m "publish: Events reviewed and published"
+          git push
+          ```
+
+          ---
+
+          ## 🎯 Best Practices
+
+          1. **Daily Review** - Prüfe Drafts täglich
+          2. **Batch Processing** - Mehrere Events gleichzeitig
+          3. **Quality First** - Lieber langsam als falsch
+          4. **Track Changes** - Saubere Git-Commits
+
+          ---
+
+          ## 📊 Monitoring
+
+          ```bash
+          # Draft-Statistik
+          find _events -name "*.json" -exec grep -l '"status": "draft"' {} \; | wc -l
+
+          # Reviewed Events
+          find _events -name "*.json" -exec grep -l '"status": "reviewed"' {} \; | wc -l
+
+          # Published Events
+          find _events -name "*.json" -exec grep -l '"status": "published"' {} \; | wc -l
+          ```
+
+          ---
+
+          **Last Updated:** 2025-11-21
+          DOC_EOF
+                    
+                    echo "✅ Created EDITORIAL_WORKFLOW.md"
+                
+                - name: Create sessions/README.md
+                  if: github.event.inputs.doc_type == 'all' || github.event.inputs.doc_type == 'sessions-readme'
+                  run: |
+                    mkdir -p docs/sessions
+                    cat > docs/sessions/README.md << 'DOC_EOF'
+          # 💬 Chat Session Archive
+
+          Auto-exported chat sessions vom GitHub Copilot.
+
+          ## 📋 Sessions
+
+          | Date | Time | File | Size |
+          |------|------|------|------|
+          | _Coming soon..._ | | | |
+
+          ---
+
+          ## 🔄 Auto-Export
+
+          Chat-Sessions werden automatisch exportiert:
+          - **Schedule:** Alle 6 Stunden
+          - **Source:** GitHub Issues mit Label `chat-export`
+          - **Format:** PDF/A (archival standard)
+
+          ---
+
+          ## 📝 Manual Export
+
+          ```bash
+          # 1. Export Chat in VS Code
+          #    Rechtsklick → "Export Chat" → Speichern als .md
+
+          # 2. Convert to PDF
+          python scripts/export_chat.py copilot-chat.md \
+            -o docs/sessions/session-$(date +%Y-%m-%d).pdf \
+            --title "Development Session" \
+            --author "feileberlin"
+
+          # 3. Commit
+          git add docs/sessions/
+          git commit -m "docs: Add chat session"
+          git push
+          ```
+
+          ---
+
+          ## 🔍 Search
+
+          ```bash
+          # Text in allen PDFs suchen
+          find . -name "*.pdf" -exec pdftotext {} - \; | grep -i "instagram"
+
+          # Neueste Sessions
+          ls -lt *.pdf | head -5
+          ```
+
+          ---
+
+          **Last Updated:** 2025-11-21
+          DOC_EOF
+                    
+                    echo "✅ Created sessions/README.md"
+                
+                - name: Commit documentation
+                  run: |
+                    git config user.name "github-actions[bot]"
+                    git config user.email "github-actions[bot]@users.noreply.github.com"
+                    
+                    git add docs/
+                    
+                    if git diff --staged --quiet; then
+                      echo "No changes to commit"
+                    else
+                      git commit -m "docs: Create documentation via GitHub Actions" \
+                        -m "Created: ${{ github.event.inputs.doc_type }}"
+                      git push
+                      
+                      echo "✅ Documentation created and pushed!"
+                    fi
+                
+                - name: Summary
+                  run: |
+                    echo "### 📚 Documentation Created" >> $GITHUB_STEP_SUMMARY
+                    echo "" >> $GITHUB_STEP_SUMMARY
+                    echo "Type: **${{ github.event.inputs.doc_type }}**" >> $GITHUB_STEP_SUMMARY
+                    echo "" >> $GITHUB_STEP_SUMMARY
+                    
+                    if [ "${{ github.event.inputs.doc_type }}" == "all" ]; then
+                      echo "Created files:" >> $GITHUB_STEP_SUMMARY
+                      echo "- docs/NOTIFICATION_SETUP.md" >> $GITHUB_STEP_SUMMARY
+                      echo "- docs/EDITORIAL_WORKFLOW.md" >> $GITHUB_STEP_SUMMARY
+                      echo "- docs/sessions/README.md" >> $GITHUB_STEP_SUMMARY
+                    fi
+          WORKFLOW_EOF
+          
+          echo "✅ Created create-documentation.yml"
+      
+      - name: Commit workflows
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git add .github/workflows/
+          
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "feat: Bootstrap workflows via GitHub Actions" \
+              -m "Created workflows: ${{ github.event.inputs.workflows }}" \
+              -m "- auto-export-chat.yml: Auto-export chat sessions" \
+              -m "- notify-pending-drafts.yml: Email notifications for pending drafts" \
+              -m "- create-documentation.yml: Generate documentation files"
+            git push
+            
+            echo "✅ Workflows created and pushed!"
+          fi
+      
+      - name: Summary
+        run: |
+          echo "### ✅ Workflows Created" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Selection:** ${{ github.event.inputs.workflows }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "#### Available Workflows" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "1. **auto-export-chat.yml**" >> $GITHUB_STEP_SUMMARY
+          echo "   - Auto-exports chat sessions from GitHub Issues" >> $GITHUB_STEP_SUMMARY
+          echo "   - Schedule: Every 6 hours" >> $GITHUB_STEP_SUMMARY
+          echo "   - Run: \`gh workflow run auto-export-chat.yml\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "2. **notify-pending-drafts.yml**" >> $GITHUB_STEP_SUMMARY
+          echo "   - Notifies about draft events >6h old" >> $GITHUB_STEP_SUMMARY
+          echo "   - Creates GitHub Issues" >> $GITHUB_STEP_SUMMARY
+          echo "   - Run: \`gh workflow run notify-pending-drafts.yml\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "3. **create-documentation.yml**" >> $GITHUB_STEP_SUMMARY
+          echo "   - Generates documentation files" >> $GITHUB_STEP_SUMMARY
+          echo "   - Creates: NOTIFICATION_SETUP, EDITORIAL_WORKFLOW, sessions/README" >> $GITHUB_STEP_SUMMARY
+          echo "   - Run: \`gh workflow run create-documentation.yml\`" >> $GITHUB_STEP_SUMMARY
