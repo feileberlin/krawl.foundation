@@ -1,0 +1,283 @@
+name: Create Documentation Files
+
+on:
+  workflow_dispatch:
+    inputs:
+      doc_type:
+        description: 'Documentation to create'
+        required: true
+        type: choice
+        options:
+          - 'all'
+          - 'notification-setup'
+          - 'editorial-workflow'
+          - 'sessions-readme'
+        default: 'all'
+
+permissions:
+  contents: write
+
+jobs:
+  create-docs:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Create NOTIFICATION_SETUP.md
+        if: github.event.inputs.doc_type == 'all' || github.event.inputs.doc_type == 'notification-setup'
+        run: |
+          mkdir -p docs
+          cat > docs/NOTIFICATION_SETUP.md << 'DOC_EOF'
+# 📧 Email Notifications Setup
+
+Guide zum Einrichten von Email-Benachrichtigungen für wartende Draft-Events.
+
+## 🎯 Was wird benachrichtigt?
+
+**Draft Events** die länger als **6 Stunden** auf Review warten:
+- 📝 GitHub Issue mit Details
+- 🔔 Automatische Assignment an Owner
+- ⏰ Check alle 6 Stunden
+
+---
+
+## 🚀 Quick Setup
+
+Der Workflow ist bereits konfiguriert! Keine weiteren Schritte nötig.
+
+**Was passiert automatisch:**
+1. Workflow läuft alle 6 Stunden
+2. Scannt `_events/*.json` nach Drafts
+3. Prüft Alter > 6 Stunden
+4. Erstellt GitHub Issue bei Bedarf
+5. Assigned Issue an Repository Owner
+
+---
+
+## 📊 Monitoring
+
+```bash
+# Workflow-Status prüfen
+gh run list --workflow=notify-pending-drafts.yml
+
+# Pending Draft Issues
+gh issue list --label "draft-pending"
+
+# Manuelle Ausführung
+gh workflow run notify-pending-drafts.yml
+```
+
+---
+
+## 🔧 Customization
+
+### Threshold ändern
+
+```bash
+gh workflow run notify-pending-drafts.yml \
+  --field threshold_hours=12  # 12 statt 6 Stunden
+```
+
+### Schedule anpassen
+
+Edit `.github/workflows/notify-pending-drafts.yml`:
+
+```yaml
+schedule:
+  - cron: '0 */3 * * *'  # Alle 3 Stunden
+  - cron: '0 9,13,17 * * 1-5'  # 3x täglich (Arbeitszeit)
+```
+
+---
+
+**Last Updated:** 2025-11-21
+DOC_EOF
+          
+          echo "✅ Created NOTIFICATION_SETUP.md"
+      
+      - name: Create EDITORIAL_WORKFLOW.md
+        if: github.event.inputs.doc_type == 'all' || github.event.inputs.doc_type == 'editorial-workflow'
+        run: |
+          mkdir -p docs
+          cat > docs/EDITORIAL_WORKFLOW.md << 'DOC_EOF'
+# 📝 Editorial Workflow
+
+Event-Review und Publishing-Prozess für krawl.foundation.
+
+## 🔄 Status-Flow
+
+```
+draft → reviewed → published
+```
+
+---
+
+## 📋 Workflow Steps
+
+### 1. **Draft erstellt** (automatisch)
+
+- Scraper findet neues Event
+- Status: `draft`
+- Notification nach 6h
+
+### 2. **Review** (manuell)
+
+```bash
+# Alle Drafts anzeigen
+./cli/event_scraper.py list --format table
+
+# Event öffnen und prüfen
+vim _events/2025-12-01-event.json
+
+# Status updaten
+./cli/event_scraper.py bulk \
+  --filter "file=2025-12-01-event.json" \
+  --set-field status reviewed
+```
+
+**Check:**
+- ✅ Titel korrekt?
+- ✅ Datum & Zeit richtig?
+- ✅ Venue & Location vorhanden?
+- ✅ Bild-URL funktioniert?
+- ✅ Beschreibung sinnvoll?
+
+### 3. **Publish** (manuell)
+
+```bash
+# Event publishen
+./cli/event_scraper.py bulk \
+  --filter "status=reviewed" \
+  --set-field status published
+
+# Commit & Push
+git add _events/
+git commit -m "publish: Events reviewed and published"
+git push
+```
+
+---
+
+## 🎯 Best Practices
+
+1. **Daily Review** - Prüfe Drafts täglich
+2. **Batch Processing** - Mehrere Events gleichzeitig
+3. **Quality First** - Lieber langsam als falsch
+4. **Track Changes** - Saubere Git-Commits
+
+---
+
+## 📊 Monitoring
+
+```bash
+# Draft-Statistik
+find _events -name "*.json" -exec grep -l '"status": "draft"' {} \; | wc -l
+
+# Reviewed Events
+find _events -name "*.json" -exec grep -l '"status": "reviewed"' {} \; | wc -l
+
+# Published Events
+find _events -name "*.json" -exec grep -l '"status": "published"' {} \; | wc -l
+```
+
+---
+
+**Last Updated:** 2025-11-21
+DOC_EOF
+          
+          echo "✅ Created EDITORIAL_WORKFLOW.md"
+      
+      - name: Create sessions/README.md
+        if: github.event.inputs.doc_type == 'all' || github.event.inputs.doc_type == 'sessions-readme'
+        run: |
+          mkdir -p docs/sessions
+          cat > docs/sessions/README.md << 'DOC_EOF'
+# 💬 Chat Session Archive
+
+Auto-exported chat sessions vom GitHub Copilot.
+
+## 📋 Sessions
+
+| Date | Time | File | Size |
+|------|------|------|------|
+| _Coming soon..._ | | | |
+
+---
+
+## 🔄 Auto-Export
+
+Chat-Sessions werden automatisch exportiert:
+- **Schedule:** Alle 6 Stunden
+- **Source:** GitHub Issues mit Label `chat-export`
+- **Format:** PDF/A (archival standard)
+
+---
+
+## 📝 Manual Export
+
+```bash
+# 1. Export Chat in VS Code
+#    Rechtsklick → "Export Chat" → Speichern als .md
+
+# 2. Convert to PDF
+python scripts/export_chat.py copilot-chat.md \
+  -o docs/sessions/session-$(date +%Y-%m-%d).pdf \
+  --title "Development Session" \
+  --author "feileberlin"
+
+# 3. Commit
+git add docs/sessions/
+git commit -m "docs: Add chat session"
+git push
+```
+
+---
+
+## 🔍 Search
+
+```bash
+# Text in allen PDFs suchen
+find . -name "*.pdf" -exec pdftotext {} - \; | grep -i "instagram"
+
+# Neueste Sessions
+ls -lt *.pdf | head -5
+```
+
+---
+
+**Last Updated:** 2025-11-21
+DOC_EOF
+          
+          echo "✅ Created sessions/README.md"
+      
+      - name: Commit documentation
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git add docs/
+          
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "docs: Create documentation via GitHub Actions" \
+              -m "Created: ${{ github.event.inputs.doc_type }}"
+            git push
+            
+            echo "✅ Documentation created and pushed!"
+          fi
+      
+      - name: Summary
+        run: |
+          echo "### 📚 Documentation Created" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Type: **${{ github.event.inputs.doc_type }}**" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ github.event.inputs.doc_type }}" == "all" ]; then
+            echo "Created files:" >> $GITHUB_STEP_SUMMARY
+            echo "- docs/NOTIFICATION_SETUP.md" >> $GITHUB_STEP_SUMMARY
+            echo "- docs/EDITORIAL_WORKFLOW.md" >> $GITHUB_STEP_SUMMARY
+            echo "- docs/sessions/README.md" >> $GITHUB_STEP_SUMMARY
+          fi

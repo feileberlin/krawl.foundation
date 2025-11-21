@@ -1,0 +1,128 @@
+name: Notify Pending Draft Events
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+    inputs:
+      threshold_hours:
+        description: 'Alert threshold (hours)'
+        type: number
+        default: 6
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check-drafts:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Check pending drafts
+        id: check
+        run: |
+          python3 << 'EOF'
+          import json, os
+          from pathlib import Path
+          from datetime import datetime, timedelta, timezone
+          
+          THRESHOLD = int("${{ github.event.inputs.threshold_hours || '6' }}")
+          drafts = []
+          now = datetime.now(timezone.utc)
+          
+          events_dir = Path("_events")
+          if events_dir.exists():
+              for f in events_dir.glob("*.json"):
+                  try:
+                      event = json.load(open(f))
+                      if event.get('status', '').lower() != 'draft':
+                          continue
+                      
+                      if 'created_at' in event:
+                          created = datetime.fromisoformat(event['created_at'].replace('Z', '+00:00'))
+                      else:
+                          created = datetime.fromtimestamp(f.stat().st_mtime, tz=timezone.utc)
+                      
+                      age = now - created
+                      if age > timedelta(hours=THRESHOLD):
+                          drafts.append({
+                              'file': f.name,
+                              'title': event.get('title', 'Untitled'),
+                              'venue': event.get('venue', 'Unknown'),
+                              'date': event.get('date', 'Unknown'),
+                              'age_hours': int(age.total_seconds() / 3600)
+                          })
+                  except: pass
+          
+          drafts.sort(key=lambda x: x['age_hours'], reverse=True)
+          
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+              f.write(f"has_drafts={'true' if drafts else 'false'}\n")
+              f.write(f"count={len(drafts)}\n")
+          
+          if drafts:
+              with open('drafts.json', 'w') as f:
+                  json.dump(drafts, f, indent=2)
+              print(f"Found {len(drafts)} pending drafts")
+          EOF
+      
+      - name: Create GitHub issue
+        if: steps.check.outputs.has_drafts == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const drafts = JSON.parse(fs.readFileSync('drafts.json'));
+            
+            // Close old notifications
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: 'draft-pending',
+              state: 'open'
+            });
+            
+            for (const issue of issues) {
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                state: 'closed'
+              });
+            }
+            
+            let body = `## ⚠️ ${drafts.length} Draft Events Pending\n\n`;
+            for (const d of drafts) {
+              body += `### 🎫 ${d.title}\n`;
+              body += `- Venue: ${d.venue}\n`;
+              body += `- Date: ${d.date}\n`;
+              body += `- File: \`${d.file}\`\n`;
+              body += `- Age: **${d.age_hours} hours** ⏰\n\n`;
+            }
+            body += `\n## Actions\n\`\`\`bash\n./cli/event_scraper.py bulk --set-field status reviewed\n\`\`\``;
+            
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `⚠️ ${drafts.length} Draft Events Pending Review`,
+              body: body,
+              labels: ['draft-pending', 'editorial', 'priority-high'],
+              assignees: [context.repo.owner]
+            });
+      
+      - name: Summary
+        if: always()
+        run: |
+          echo "### 📊 Draft Check Summary" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.check.outputs.has_drafts }}" == "true" ]; then
+            echo "⚠️ ${{ steps.check.outputs.count }} drafts pending" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ No pending drafts" >> $GITHUB_STEP_SUMMARY
+          fi
