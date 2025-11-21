@@ -2,7 +2,7 @@ name: 🧪 Dev Tests (before push)
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
     paths:
       - 'cli/**'
       - 'tests/**'
@@ -10,7 +10,7 @@ on:
       - '.github/workflows/test.yml'
 
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 permissions:
   contents: read

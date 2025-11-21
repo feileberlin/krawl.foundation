@@ -145,9 +145,15 @@ def html_to_pdf(html_content, output_path, metadata):
         from reportlab.lib.pagesizes import A4
         from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
         from reportlab.lib.units import cm
-        from reportlab.platypus import (PageBreak, Paragraph, Preformatted,
-                                        SimpleDocTemplate, Spacer, Table,
-                                        TableStyle)
+        from reportlab.platypus import (
+            PageBreak,
+            Paragraph,
+            Preformatted,
+            SimpleDocTemplate,
+            Spacer,
+            Table,
+            TableStyle,
+        )
     except ImportError as e:
         print(f"❌ Error: Missing dependency: {e}")
         print("   pip install reportlab beautifulsoup4 lxml")

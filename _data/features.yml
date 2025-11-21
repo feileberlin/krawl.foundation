@@ -41,11 +41,11 @@ todos:
   - task: JSON Schema für Event-Validierung
     status: pending
     added: 2025-11-21
-    - task: "Better"
-      status: pending
-      added: 2025-11-21
-      command: "tests/test_event_scraper.py"
-      note: "Add some more same-day, next-day, next-week and next-month LoremIpsum events in debug mode"
+  - task: Better event test data
+    status: pending
+    added: 2025-11-21
+    command: tests/test_event_scraper.py
+    note: Add some more same-day, next-day, next-week and next-month LoremIpsum events in debug mode
 
   low_priority:
   - task: Smart Deduplication implementieren
@@ -389,8 +389,3 @@ stats:
   coverage: 85
   last_release: 1.0.0
   next_milestone: 1.1.0
-    - task: "Better event test data"
-      status: pending
-      added: 2025-11-21
-      command: "tests/test_event_scraper.py"
-      note: "Add some more same-day, next-day, next-week and next-month LoremIpsum events in debug mode"

@@ -28,8 +28,8 @@ url: "https://feileberlin.github.io"
 
 # Autor-Informationen (für Meta-Tags, RSS)
 author:
-  name: "feileberlin"
-  email: "your-email@example.com"  # Optional
+  name: "Stefan Schmitt"
+  email: ""  # Optional
   github: "feileberlin"
 
 # Zeitzone (für Datum/Zeit in Posts)
@@ -155,7 +155,7 @@ project:
   version: "0.1.0-alpha"
   status: "In Entwicklung"
   phase: "Foundation"
-  
+
 # Debug-Modus (ausführliche Logs, Test-Daten sichtbar)
 debug: true
 
@@ -168,7 +168,7 @@ github:
 community:
   name: "krawl.foundation"
   tagline: "Event-Plattform für alle"
-  
+
 # Karten-Integration (später für Leaflet.js)
 map:
   enabled: false       # Noch nicht implementiert
