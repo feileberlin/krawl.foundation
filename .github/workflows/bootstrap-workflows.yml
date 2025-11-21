@@ -1,4 +1,4 @@
-name: 🔄 Bootstrap (Setup only)
+name: 🔄 New Workflow (manual when needed)
 
 on:
   workflow_dispatch:

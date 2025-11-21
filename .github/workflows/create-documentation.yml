@@ -1,4 +1,4 @@
-name: 📚 Documentation Generator
+name: 📚 Doc Generator (manual when needed)
 
 on:
   workflow_dispatch:

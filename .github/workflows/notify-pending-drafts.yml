@@ -1,4 +1,4 @@
-name: ⚠️ Draft Alerts
+name: ⚠️ Draft Alerts (triggered 4/d)
 
 on:
   schedule:

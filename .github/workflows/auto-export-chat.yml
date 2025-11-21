@@ -1,4 +1,4 @@
-name: 💬 Chat Archive
+name: 💬 Chat Archive (triggered 2/h)
 
 on:
   schedule:
