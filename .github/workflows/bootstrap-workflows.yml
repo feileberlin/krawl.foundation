@@ -1,4 +1,4 @@
-name: Bootstrap Missing Workflows
+name: 🔄 Bootstrap (Setup only)
 
 on:
   workflow_dispatch:

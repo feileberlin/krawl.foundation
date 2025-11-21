@@ -20,7 +20,7 @@
 
 # 20251121151800 deplying this workflowagain from Github Frontend SCS
 
-name: Deploy to GitHub Pages
+name: 🚀 Deploy to Pages
 
 on:
   # Automatisch bei Push auf main

@@ -1,4 +1,4 @@
-name: Notify Pending Draft Events
+name: ⚠️ Draft Alerts
 
 on:
   schedule:

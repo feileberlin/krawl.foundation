@@ -1,4 +1,4 @@
-name: Create Documentation Files
+name: 📚 Documentation Generator
 
 on:
   workflow_dispatch:

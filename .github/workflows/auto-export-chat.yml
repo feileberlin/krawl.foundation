@@ -1,4 +1,4 @@
-name: Auto-Export Chat Sessions
+name: 💬 Chat Archive
 
 on:
   schedule:
