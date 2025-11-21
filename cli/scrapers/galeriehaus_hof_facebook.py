@@ -15,9 +15,9 @@ Alternative Ansätze:
 4. Manuelle Dateneingabe mit generate-Command
 """
 
-from typing import List, Dict, Any, Optional
 import sys
 from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 # Add parent directory to path for standalone execution
 if __name__ == "__main__":
@@ -49,8 +49,8 @@ class GaleriehausHofFacebookScraper(BaseScraper):
         try:
             from selenium import webdriver
             from selenium.webdriver.common.by import By
-            from selenium.webdriver.support.ui import WebDriverWait
             from selenium.webdriver.support import expected_conditions as EC
+            from selenium.webdriver.support.ui import WebDriverWait
 
             self.use_selenium = True
             print("✓ Selenium verfügbar - verwende Browser-Automation")
@@ -80,8 +80,8 @@ class GaleriehausHofFacebookScraper(BaseScraper):
         from selenium import webdriver
         from selenium.webdriver.common.by import By
         from selenium.webdriver.firefox.options import Options
-        from selenium.webdriver.support.ui import WebDriverWait
         from selenium.webdriver.support import expected_conditions as EC
+        from selenium.webdriver.support.ui import WebDriverWait
 
         # Headless Firefox
         options = Options()

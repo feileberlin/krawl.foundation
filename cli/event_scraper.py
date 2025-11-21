@@ -5,12 +5,12 @@ Scraping, comparing, merging, and managing event data.
 """
 
 import argparse
+import difflib
 import json
 import sys
-from pathlib import Path
 from datetime import datetime
-from typing import Dict, List, Any, Optional
-import difflib
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 
 class EventManager:

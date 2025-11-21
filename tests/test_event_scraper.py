@@ -2,9 +2,11 @@
 Unit Tests für Event Scraper CLI
 """
 
-import pytest
 import json
 from pathlib import Path
+
+import pytest
+
 from cli.event_scraper import EventManager
 
 

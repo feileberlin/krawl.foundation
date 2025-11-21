@@ -40,10 +40,10 @@ Requires:
 """
 
 import argparse
-import sys
-from pathlib import Path
-from datetime import datetime
 import re
+import sys
+from datetime import datetime
+from pathlib import Path
 
 
 def parse_args():
@@ -139,21 +139,15 @@ def markdown_to_html(markdown_text):
 def html_to_pdf(html_content, output_path, metadata):
     """Convert HTML to PDF with ReportLab"""
     try:
-        from reportlab.lib.pagesizes import A4
-        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-        from reportlab.lib.units import cm
-        from reportlab.platypus import (
-            SimpleDocTemplate,
-            Paragraph,
-            Spacer,
-            PageBreak,
-            Preformatted,
-            Table,
-            TableStyle,
-        )
-        from reportlab.lib import colors
-        from reportlab.lib.enums import TA_LEFT, TA_CENTER
         from bs4 import BeautifulSoup
+        from reportlab.lib import colors
+        from reportlab.lib.enums import TA_CENTER, TA_LEFT
+        from reportlab.lib.pagesizes import A4
+        from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+        from reportlab.lib.units import cm
+        from reportlab.platypus import (PageBreak, Paragraph, Preformatted,
+                                        SimpleDocTemplate, Spacer, Table,
+                                        TableStyle)
     except ImportError as e:
         print(f"❌ Error: Missing dependency: {e}")
         print("   pip install reportlab beautifulsoup4 lxml")

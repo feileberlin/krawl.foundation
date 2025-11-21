@@ -12,81 +12,81 @@ permissions:
 jobs:
   python-lint:
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      
+
       - name: Install linting tools
         run: |
           pip install --upgrade pip
           pip install flake8 black isort mypy pylint
           pip install -r requirements.txt
-      
+
       - name: Check formatting with Black
         run: black --check --diff cli/ scripts/ tests/
-      
+
       - name: Check import sorting with isort
         run: isort --check-only --diff cli/ scripts/ tests/
-      
+
       - name: Lint with flake8
         run: |
           # Stop on syntax errors or undefined names
           flake8 cli/ scripts/ tests/ --count --select=E9,F63,F7,F82 --show-source --statistics
           # Exit-zero treats all errors as warnings
           flake8 cli/ scripts/ tests/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-      
+
       - name: Type check with mypy
         run: mypy cli/ --ignore-missing-imports || true
         continue-on-error: true
-  
+
   yaml-lint:
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Install yamllint
         run: pip install yamllint
-      
+
       - name: Lint YAML files
         run: |
           yamllint -d "{extends: default, rules: {line-length: {max: 200}, indentation: {spaces: 2}}}" \
             .github/workflows/*.yml \
             _data/*.yml \
             _config.yml
-  
+
   markdown-lint:
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Lint Markdown files
         uses: DavidAnson/markdownlint-cli2-action@v14
         with:
           globs: '**/*.md'
-  
+
   shell-lint:
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Lint shell scripts
         run: |
           sudo apt-get install -y shellcheck
           shellcheck scripts/*.sh
-  
+
   workflow-consistency:
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Check for github.event.inputs usage
         run: |
           echo "🔍 Checking for deprecated github.event.inputs..."
@@ -96,7 +96,7 @@ jobs:
           else
             echo "✅ No deprecated input references found"
           fi
-      
+
       - name: Check for TODO/FIXME in code
         run: |
           echo "🔍 Checking for TODO/FIXME comments..."

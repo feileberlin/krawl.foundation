@@ -20,26 +20,26 @@ permissions:
 jobs:
   export-chat:
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
           cache: 'pip'
-      
+
       - name: Install dependencies
         run: |
           pip install markdown reportlab pypdf beautifulsoup4 lxml pyyaml
           sudo apt-get install -y ghostscript poppler-utils
-      
+
       - name: Generate timestamp
         id: timestamp
         run: |
           echo "datetime=$(date +%Y-%m-%d-%H%M)" >> $GITHUB_OUTPUT
           echo "iso=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_OUTPUT
-      
+
       - name: Export from GitHub Issues
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -50,7 +50,7 @@ jobs:
             --json number,title,body,createdAt,author \
             --jq '.[] | "# \(.title)\n\n**Author:** \(.author.login)\n\n\(.body)\n\n---\n\n"' \
             > chat-raw.md || echo "# No content" > chat-raw.md
-      
+
       - name: Check content
         id: check
         run: |
@@ -59,27 +59,27 @@ jobs:
           else
             echo "has_content=false" >> $GITHUB_OUTPUT
           fi
-      
+
       - name: Convert to PDF/A
         if: steps.check.outputs.has_content == 'true'
         run: |
           mkdir -p docs/sessions
-          
+
           python scripts/export_chat.py chat-raw.md \
             -o "docs/sessions/session-${{ steps.timestamp.outputs.datetime }}.pdf" \
             --title "Auto Export ${{ steps.timestamp.outputs.datetime }}" \
             --author "${{ github.repository_owner }}" \
             --format pdf
-          
+
           gs -dPDFA=1 -dBATCH -dNOPAUSE \
              -sProcessColorModel=DeviceRGB \
              -sDEVICE=pdfwrite \
              -sPDFACompatibilityPolicy=1 \
              -sOutputFile="docs/sessions/session-${{ steps.timestamp.outputs.datetime }}-PDFA.pdf" \
              "docs/sessions/session-${{ steps.timestamp.outputs.datetime }}.pdf"
-          
+
           rm "docs/sessions/session-${{ steps.timestamp.outputs.datetime }}.pdf"
-      
+
       - name: Commit
         if: steps.check.outputs.has_content == 'true'
         run: |
@@ -88,7 +88,7 @@ jobs:
           git add docs/sessions/
           git commit -m "docs: Auto-export chat ${{ steps.timestamp.outputs.datetime }}" || true
           git push
-      
+
       - name: Summary
         if: always()
         run: |

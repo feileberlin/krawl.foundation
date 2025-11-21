@@ -3,10 +3,11 @@ Base Scraper Class - Template für alle Scraper-Implementierungen
 """
 
 from abc import ABC, abstractmethod
-from typing import List, Dict, Any, Optional
+from datetime import datetime
+from typing import Any, Dict, List, Optional
+
 import requests
 from bs4 import BeautifulSoup
-from datetime import datetime
 
 
 class BaseScraper(ABC):

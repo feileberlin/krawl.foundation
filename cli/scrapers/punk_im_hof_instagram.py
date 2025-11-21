@@ -15,10 +15,10 @@ Empfohlene Alternativen:
 4. Manuelle Erfassung
 """
 
-from typing import List, Dict, Any, Optional
+import re
 import sys
 from pathlib import Path
-import re
+from typing import Any, Dict, List, Optional
 
 # Add parent directory to path for standalone execution
 if __name__ == "__main__":

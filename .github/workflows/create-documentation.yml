@@ -25,10 +25,10 @@ permissions:
 jobs:
   create-docs:
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Create NOTIFICATION_SETUP.md
         if: inputs.doc_type == 'all' || inputs.doc_type == 'notification-setup'
         run: |
@@ -98,9 +98,9 @@ schedule:
 
 **Last Updated:** 2025-11-21
 DOC_EOF
-          
+
           echo "✅ Created NOTIFICATION_SETUP.md"
-      
+
       - name: Create EDITORIAL_WORKFLOW.md
         if: inputs.doc_type == 'all' || inputs.doc_type == 'editorial-workflow'
         run: |
@@ -190,9 +190,9 @@ find _events -name "*.json" -exec grep -l '"status": "published"' {} \; | wc -l
 
 **Last Updated:** 2025-11-21
 DOC_EOF
-          
+
           echo "✅ Created EDITORIAL_WORKFLOW.md"
-      
+
       - name: Create sessions/README.md
         if: inputs.doc_type == 'all' || inputs.doc_type == 'sessions-readme'
         run: |
@@ -253,33 +253,33 @@ ls -lt *.pdf | head -5
 
 **Last Updated:** 2025-11-21
 DOC_EOF
-          
+
           echo "✅ Created sessions/README.md"
-      
+
       - name: Commit documentation
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          
+
           git add docs/
-          
+
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
             git commit -m "docs: Create documentation via GitHub Actions" \
               -m "Created: ${{ inputs.doc_type }}"
             git push
-            
+
             echo "✅ Documentation created and pushed!"
           fi
-      
+
       - name: Summary
         run: |
           echo "### 📚 Documentation Created" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Type: **${{ inputs.doc_type }}**" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          
+
           if [ "${{ inputs.doc_type }}" == "all" ]; then
             echo "Created files:" >> $GITHUB_STEP_SUMMARY
             echo "- docs/NOTIFICATION_SETUP.md" >> $GITHUB_STEP_SUMMARY

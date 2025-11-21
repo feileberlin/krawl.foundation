@@ -14,13 +14,14 @@ Dependencies:
 - imgcat oder chafa (Terminal-Bild-Display)
 """
 
-from typing import List, Dict, Any, Optional, Tuple
-import requests
-from pathlib import Path
 import json
 import subprocess
 import tempfile
 from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
+
+import requests
 
 
 class ImageStreamExtractor:

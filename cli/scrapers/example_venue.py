@@ -5,7 +5,8 @@ Dieser Scraper dient als Vorlage. Kopiere diese Datei und passe sie an
 die Struktur der Ziel-Website an.
 """
 
-from typing import List, Dict, Any
+from typing import Any, Dict, List
+
 from .base import BaseScraper
 
 

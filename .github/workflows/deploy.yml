@@ -14,7 +14,7 @@
 #
 # Voraussetzungen:
 #   - Repository Settings > Pages > Source: "GitHub Actions"
-#   - NICHT "Deploy from a branch"  
+#   - NICHT "Deploy from a branch"
 #
 # ============================================================================
 
@@ -26,7 +26,7 @@ on:
   # Automatisch bei Push auf main
   push:
     branches: ["main"]
-  
+
   # Manuell auslösen (über Actions-Tab)
   workflow_dispatch:
     inputs:
@@ -52,36 +52,36 @@ jobs:
   # ============================================================================
   build:
     runs-on: ubuntu-latest
-    
+
     steps:
       # 1. Checkout Code
       - name: 📥 Checkout
         uses: actions/checkout@v4
-      
+
       # 2. Setup Ruby
       - name: 💎 Setup Ruby
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.2'
           bundler-cache: true  # Cached Bundle Dependencies
-      
+
       # 3. Setup GitHub Pages (konfiguriert Jekyll automatisch)
       - name: 🔧 Setup Pages
         id: pages
         uses: actions/configure-pages@v4
-      
+
       # 4. Build Jekyll Site
       - name: 🏗️ Build with Jekyll
         run: bundle exec jekyll build --baseurl "${{ steps.pages.outputs.base_path }}"
         env:
           JEKYLL_ENV: production
-      
+
       # 5. Upload Build Artifact (für Deploy-Job)
       - name: 📤 Upload Artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: _site/
-  
+
   # ============================================================================
   # JOB 2: Deploy to GitHub Pages
   # ============================================================================
@@ -89,15 +89,15 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    
+
     runs-on: ubuntu-latest
     needs: build
-    
+
     steps:
       - name: 🚀 Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-      
+
       - name: ✅ Deployment erfolgreich
         run: |
           echo "🎉 Website deployed to: ${{ steps.deployment.outputs.page_url }}"
