@@ -169,13 +169,94 @@ community:
   name: "krawl.foundation"
   tagline: "Event-Plattform für alle"
 
-# Karten-Integration (später für Leaflet.js)
+# Karten-Integration (Event Map - Phase 1)
 map:
-  enabled: false       # Noch nicht implementiert
+  enabled: true
+  
+  # Default Center & Zoom
   center:
-    lat: 52.5200      # Berlin
+    lat: 52.5200      # Berlin Town Hall
     lng: 13.4050
-  zoom: 12
+    label: "Town Hall"
+  zoom: 13
+  
+  # Tile Provider (CartoDB Dark Matter)
+  tiles:
+    url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+    attribution: '© OpenStreetMap'
+    maxZoom: 19
+  
+  # Location Presets
+  locations:
+    - name: "Town Hall"
+      id: "townHall"
+      lat: 52.5200
+      lng: 13.4050
+    - name: "Central Station"
+      id: "centralStation"
+      lat: 52.5251
+      lng: 13.3694
+  
+  # Categories
+  categories:
+    - id: "dancefloor"
+      label: "Dancefloor"
+      icon: "🕺"
+    - id: "onStage"
+      label: "On Stage"
+      icon: "🎭"
+    - id: "exhibitions"
+      label: "Exhibitions"
+      icon: "🖼️"
+    - id: "markets"
+      label: "Markets"
+      icon: "🛍️"
+    - id: "concerts"
+      label: "Concerts"
+      icon: "🎵"
+    - id: "education"
+      label: "Education"
+      icon: "📚"
+    - id: "withChildren"
+      label: "With Children"
+      icon: "👨‍👩‍👧"
+  
+  # Time Filters
+  time_filters:
+    - id: "tillSunrise"
+      label: "till sunrise"
+      hours: 12
+    - id: "thisWeek"
+      label: "this week"
+      days: 7
+    - id: "tillFullMoon"
+      label: "till full moon"
+      dynamic: true
+    - id: "withoutLimit"
+      label: "without limit"
+      unlimited: true
+  
+  # Distance Filters
+  distance_filters:
+    - id: "withinOneKm"
+      label: "within 1km"
+      meters: 1000
+    - id: "withinThreeKm"
+      label: "within 3km"
+      meters: 3000
+    - id: "withinTenKm"
+      label: "within 10km"
+      meters: 10000
+    - id: "geoLocation"
+      label: "from my location"
+      use_geolocation: true
+  
+  # Default Filter Values
+  defaults:
+    category: "all"
+    time: "tillSunrise"
+    distance: "withinThreeKm"
+    location: "townHall"
 
 # Feature-Flags (Features an/aus schalten ohne Code zu ändern)
 features:

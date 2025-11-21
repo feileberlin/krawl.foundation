@@ -1,0 +1,121 @@
+---
+layout: default
+title: Event Map
+permalink: /map/
+---
+
+<div id="map-container" role="application" aria-label="Interactive Event Map">
+  <!-- Leaflet Map -->
+  <div id="map" tabindex="0" role="img" aria-label="Map showing event locations"></div>
+  
+  <!-- Filter Bar (Sentence Format) -->
+  <div id="filter-bar" role="region" aria-live="polite" aria-atomic="true">
+    <span id="event-count" class="filter-part">{{ site.events | where: "published", true | size }} events</span>
+    <span class="filter-separator">of</span>
+    
+    <select id="category-filter" class="filter-part" aria-label="Filter by category">
+      <option value="all">any type</option>
+      {% for cat in site.map.categories %}
+      <option value="{{ cat.id }}">{{ cat.label | downcase }}</option>
+      {% endfor %}
+    </select>
+    
+    <select id="time-filter" class="filter-part" aria-label="Filter by time">
+      {% for filter in site.map.time_filters %}
+      <option value="{{ filter.id }}" {% if filter.id == site.map.defaults.time %}selected{% endif %}>
+        {{ filter.label }}
+      </option>
+      {% endfor %}
+    </select>
+    
+    <select id="distance-filter" class="filter-part" aria-label="Filter by distance">
+      {% for filter in site.map.distance_filters %}
+      <option value="{{ filter.id }}" {% if filter.id == site.map.defaults.distance %}selected{% endif %}>
+        {{ filter.label }}
+      </option>
+      {% endfor %}
+    </select>
+    
+    <span class="filter-separator">from</span>
+    
+    <select id="location-filter" class="filter-part" aria-label="Change map center">
+      {% for loc in site.map.locations %}
+      <option value="{{ loc.id }}" 
+              data-lat="{{ loc.lat }}" 
+              data-lng="{{ loc.lng }}"
+              {% if loc.id == site.map.defaults.location %}selected{% endif %}>
+        {{ loc.name | downcase }}
+      </option>
+      {% endfor %}
+    </select>
+  </div>
+  
+  <!-- Event Flyer (Paper Style) -->
+  <details id="event-flyer" class="flyer" aria-hidden="true">
+    <summary class="sr-only">Event Details</summary>
+    <article class="flyer-content" role="dialog" aria-labelledby="flyer-title">
+      <!-- Populated by JavaScript -->
+    </article>
+    <button id="flyer-close" aria-label="Close event details" class="sr-only-focusable">×</button>
+  </details>
+</div>
+
+<!-- Event Data (JSON for JavaScript) -->
+<script type="application/json" id="events-data">
+[
+  {% assign published_events = site.events | where: "published", true %}
+  {% for event in published_events %}
+  {
+    "id": "{{ event.slug }}",
+    "title": {{ event.title | jsonify }},
+    "date": "{{ event.date | date_to_xmlschema }}",
+    "lat": {{ event.coordinates.lat | default: site.map.center.lat }},
+    "lng": {{ event.coordinates.lng | default: site.map.center.lng }},
+    "category": "{{ event.category | default: 'uncategorized' }}",
+    "organizer": {
+      "name": {{ event.organizer | jsonify }},
+      "avatar": "{{ event.organizer_avatar | default: '/assets/img/default-avatar.svg' }}"
+    },
+    "venue": {
+      "name": {{ event.location.name | jsonify }},
+      "address": {{ event.location.address | jsonify }}
+    },
+    "contact": {
+      "website": "{{ event.contact.website }}",
+      "email": "{{ event.contact.email }}"
+    }
+  }{% unless forloop.last %},{% endunless %}
+  {% endfor %}
+]
+</script>
+
+<!-- Map Configuration -->
+<script type="application/json" id="map-config">
+{
+  "center": { "lat": {{ site.map.center.lat }}, "lng": {{ site.map.center.lng }} },
+  "zoom": {{ site.map.zoom }},
+  "tiles": {
+    "url": {{ site.map.tiles.url | jsonify }},
+    "attribution": {{ site.map.tiles.attribution | jsonify }},
+    "maxZoom": {{ site.map.tiles.maxZoom }}
+  },
+  "defaults": {
+    "category": "{{ site.map.defaults.category }}",
+    "time": "{{ site.map.defaults.time }}",
+    "distance": "{{ site.map.defaults.distance }}",
+    "location": "{{ site.map.defaults.location }}"
+  },
+  "filters": {
+    "categories": {{ site.map.categories | jsonify }},
+    "time": {{ site.map.time_filters | jsonify }},
+    "distance": {{ site.map.distance_filters | jsonify }},
+    "locations": {{ site.map.locations | jsonify }}
+  }
+}
+</script>
+
+<!-- Leaflet Library (local assets) -->
+<link rel="stylesheet" href="/assets/vendor/leaflet/leaflet.css">
+<link rel="stylesheet" href="/assets/css/map.css">
+<script src="/assets/vendor/leaflet/leaflet.js"></script>
+<script src="/assets/js/map.js" defer></script>
