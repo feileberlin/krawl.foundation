@@ -1,469 +1,378 @@
-# =============================================================================
-# Features & TODOs - krawl.foundation
-# =============================================================================
-# Single Source of Truth für GitHub Pages Dashboard
-# Last Updated: 2025-11-21
-#
-# Bearbeitung:
-#   - Manuell: Editiere diese Datei direkt
-#   - GitHub UI: Actions → Update Features → Run workflow
-#   - CLI: python scripts/update_features.py
-# =============================================================================
-
 metadata:
-  last_updated: 2025-11-21
-  version: "1.0.0"
+  last_updated: '2025-11-21'
+  version: 1.0.0
   maintainer: feileberlin
-
-# =============================================================================
-# TODO LISTS
-# =============================================================================
-
 todos:
-
   high_priority:
-    - task: "Projekt zu GitHub pushen"
-      status: pending
-      added: 2025-11-21
-      command: "git add . && git commit -m 'feat: Initial release' && git push"
-
-    - task: "GitHub Actions aktivieren"
-      status: pending
-      added: 2025-11-21
-      steps:
-        - "Settings → Actions → General"
-        - "Allow all actions"
-
-    - task: "Extract Command testen"
-      status: pending
-      added: 2025-11-21
-      command: "pip install instaloader pillow && ./cli/event_scraper.py extract instagram punkinhof -n 3"
-
-    - task: "Facebook Access Token holen"
-      status: pending
-      added: 2025-11-21
-      optional: true
-      url: "https://developers.facebook.com/apps"
-
+  - task: Projekt zu GitHub pushen
+    status: pending
+    added: 2025-11-21
+    command: 'git add . && git commit -m ''feat: Initial release'' && git push'
+  - task: GitHub Actions aktivieren
+    status: pending
+    added: 2025-11-21
+    steps:
+    - Settings → Actions → General
+    - Allow all actions
+  - task: Extract Command testen
+    status: pending
+    added: 2025-11-21
+    command: pip install instaloader pillow && ./cli/event_scraper.py extract instagram
+      punkinhof -n 3
+  - task: Facebook Access Token holen
+    status: pending
+    added: 2025-11-21
+    optional: true
+    url: https://developers.facebook.com/apps
   medium_priority:
-    - task: "Ersten Auto-Scrape abwarten"
-      status: pending
-      added: 2025-11-21
-      scheduled: "2025-11-22 07:00"
-      note: "Workflow läuft täglich um 7 Uhr"
-
-    - task: "Editorial Review durchführen"
-      status: pending
-      added: 2025-11-21
-      doc: "docs/EDITORIAL_WORKFLOW.md"
-
-    - task: "Filter-Feature implementieren"
-      status: pending
-      added: 2025-11-21
-      example: "./cli/event_scraper.py bulk --filter 'status==draft' --set-field status reviewed"
-
-    - task: "JSON Schema für Event-Validierung"
-      status: pending
-      added: 2025-11-21
-
+  - task: Ersten Auto-Scrape abwarten
+    status: pending
+    added: 2025-11-21
+    scheduled: 2025-11-22 07:00
+    note: Workflow läuft täglich um 7 Uhr
+  - task: Editorial Review durchführen
+    status: pending
+    added: 2025-11-21
+    doc: docs/EDITORIAL_WORKFLOW.md
+  - task: Filter-Feature implementieren
+    status: pending
+    added: 2025-11-21
+    example: ./cli/event_scraper.py bulk --filter 'status==draft' --set-field status
+      reviewed
+  - task: JSON Schema für Event-Validierung
+    status: pending
+    added: 2025-11-21
   low_priority:
-    - task: "Smart Deduplication implementieren"
-      status: pending
-      added: 2025-11-21
-      priority: high_feature
-
-    - task: "Export-Features (CSV, iCal)"
-      status: pending
-      added: 2025-11-21
-
-    - task: "Notifications einrichten"
-      status: pending
-      added: 2025-11-21
-      note: "Email/Slack bei neuen Draft-Events"
-
-    - task: "Mehr Venue-Scraper erstellen"
-      status: pending
-      added: 2025-11-21
-      venues:
-        - Berghain
-        - SO36
-        - Kulturbrauerei
-
+  - task: Smart Deduplication implementieren
+    status: pending
+    added: 2025-11-21
+    priority: high_feature
+  - task: Export-Features (CSV, iCal)
+    status: pending
+    added: 2025-11-21
+  - task: Notifications einrichten
+    status: pending
+    added: 2025-11-21
+    note: Email/Slack bei neuen Draft-Events
+  - task: Mehr Venue-Scraper erstellen
+    status: pending
+    added: 2025-11-21
+    venues:
+    - Berghain
+    - SO36
+    - Kulturbrauerei
   nice_to_have:
-    - task: "OCR testen"
-      status: pending
-      added: 2025-11-21
-      packages:
-        - tesseract-ocr
-        - pytesseract
-
-    - task: "Terminal Image Viewer"
-      status: pending
-      added: 2025-11-21
-      tools:
-        - chafa
-        - imgcat
-
-    - task: "Web-Interface bauen"
-      status: pending
-      added: 2025-11-21
-      optional: true
-
+  - task: OCR testen
+    status: pending
+    added: 2025-11-21
+    packages:
+    - tesseract-ocr
+    - pytesseract
+  - task: Terminal Image Viewer
+    status: pending
+    added: 2025-11-21
+    tools:
+    - chafa
+    - imgcat
+  - task: Web-Interface bauen
+    status: pending
+    added: 2025-11-21
+    optional: true
   completed:
-    - task: "CLI mit 7 Commands erstellt"
-      status: done
-      completed: 2025-11-21
-      commands:
-        - list
-        - diff
-        - merge
-        - generate
-        - bulk
-        - scrape
-        - extract
-
-    - task: "Image Stream Extractor implementiert"
-      status: done
-      completed: 2025-11-21
-      file: "cli/image_extractor.py"
-
-    - task: "Interaktiver Event-Editor erstellt"
-      status: done
-      completed: 2025-11-21
-      feature: "Bild + Text → Event JSON"
-
-    - task: "GitHub Actions Setup"
-      status: done
-      completed: 2025-11-21
-      workflows:
-        - test.yml
-        - scrape-events.yml
-
-    - task: "FEATURE_REGISTRY.md erstellt"
-      status: done
-      completed: 2025-11-21
-
-    - task: "Features + TODOs als YAML"
-      status: done
-      completed: 2025-11-21
-      file: "_data/features.yml"
-
-    - task: "Dashboard für GitHub Pages"
-      status: done
-      completed: 2025-11-21
-      file: "dashboard.html"
-      note: "Interaktives Dashboard mit Statistics, TODOs, Features, Roadmap"
-
-    - task: "add_todo.sh Script erstellt"
-      status: done
-      completed: 2025-11-21
-      file: "scripts/add_todo.sh"
-      note: "CLI-Tool für schnelle TODO-Erfassung mit Git-Integration"
-
-    - task: "export_chat.py Script erstellt"
-      status: done
-      completed: 2025-11-21
-      file: "scripts/export_chat.py"
-      note: "Chat-Verlauf zu PDF/A exportieren für Archivierung"
-
-    - task: "Chat Export Guide geschrieben"
-      status: done
-      completed: 2025-11-21
-      file: "docs/CHAT_EXPORT_GUIDE.md"
-      note: "Vollständige Dokumentation für Chat-Export-Workflow"
-
-# =============================================================================
-# ACTIVE FEATURES
-# =============================================================================
-
+  - task: CLI mit 7 Commands erstellt
+    status: done
+    completed: 2025-11-21
+    commands:
+    - list
+    - diff
+    - merge
+    - generate
+    - bulk
+    - scrape
+    - extract
+  - task: Image Stream Extractor implementiert
+    status: done
+    completed: 2025-11-21
+    file: cli/image_extractor.py
+  - task: Interaktiver Event-Editor erstellt
+    status: done
+    completed: 2025-11-21
+    feature: Bild + Text → Event JSON
+  - task: GitHub Actions Setup
+    status: done
+    completed: 2025-11-21
+    workflows:
+    - test.yml
+    - scrape-events.yml
+  - task: FEATURE_REGISTRY.md erstellt
+    status: done
+    completed: 2025-11-21
+  - task: Features + TODOs als YAML
+    status: done
+    completed: 2025-11-21
+    file: _data/features.yml
+  - task: Dashboard für GitHub Pages
+    status: done
+    completed: 2025-11-21
+    file: dashboard.html
+    note: Interaktives Dashboard mit Statistics, TODOs, Features, Roadmap
+  - task: add_todo.sh Script erstellt
+    status: done
+    completed: 2025-11-21
+    file: scripts/add_todo.sh
+    note: CLI-Tool für schnelle TODO-Erfassung mit Git-Integration
+  - task: export_chat.py Script erstellt
+    status: done
+    completed: 2025-11-21
+    file: scripts/export_chat.py
+    note: Chat-Verlauf zu PDF/A exportieren für Archivierung
+  - task: Chat Export Guide geschrieben
+    status: done
+    completed: 2025-11-21
+    file: docs/CHAT_EXPORT_GUIDE.md
+    note: Vollständige Dokumentation für Chat-Export-Workflow
 features:
-
   cli_commands:
-    - name: "list"
-      description: "Liste alle Events (Tabelle/JSON)"
-      file: "cli/event_scraper.py"
-      status: active
-      added: 2025-11-21
-
-    - name: "diff"
-      description: "Vergleiche zwei Events, zeige Unterschiede"
-      file: "cli/event_scraper.py"
-      status: active
-      added: 2025-11-21
-
-    - name: "merge"
-      description: "Merge Events (alle/selektive Felder)"
-      file: "cli/event_scraper.py"
-      status: active
-      added: 2025-11-21
-
-    - name: "generate"
-      description: "Generiere Lorem-Ipsum Test-Events"
-      file: "cli/event_scraper.py"
-      status: active
-      added: 2025-11-21
-
-    - name: "bulk"
-      description: "Bulk-Operations mit Dry-Run"
-      file: "cli/event_scraper.py"
-      status: active
-      added: 2025-11-21
-
-    - name: "scrape"
-      description: "Event-Scraping (Placeholder)"
-      file: "cli/event_scraper.py"
-      status: placeholder
-      added: 2025-11-21
-
-    - name: "extract"
-      description: "Extrahiere Events aus Social Media Bildern (interaktiv)"
-      file: "cli/event_scraper.py"
-      status: active
-      added: 2025-11-21
-      highlight: true
-
+  - name: list
+    description: Liste alle Events (Tabelle/JSON)
+    file: cli/event_scraper.py
+    status: active
+    added: 2025-11-21
+  - name: diff
+    description: Vergleiche zwei Events, zeige Unterschiede
+    file: cli/event_scraper.py
+    status: active
+    added: 2025-11-21
+  - name: merge
+    description: Merge Events (alle/selektive Felder)
+    file: cli/event_scraper.py
+    status: active
+    added: 2025-11-21
+  - name: generate
+    description: Generiere Lorem-Ipsum Test-Events
+    file: cli/event_scraper.py
+    status: active
+    added: 2025-11-21
+  - name: bulk
+    description: Bulk-Operations mit Dry-Run
+    file: cli/event_scraper.py
+    status: active
+    added: 2025-11-21
+  - name: scrape
+    description: Event-Scraping (Placeholder)
+    file: cli/event_scraper.py
+    status: placeholder
+    added: 2025-11-21
+  - name: extract
+    description: Extrahiere Events aus Social Media Bildern (interaktiv)
+    file: cli/event_scraper.py
+    status: active
+    added: 2025-11-21
+    highlight: true
   core_features:
-    - name: "EventManager"
-      description: "JSON/Markdown Save/Load, Comparison, Merge"
-      file: "cli/event_scraper.py"
-      status: active
-      added: 2025-11-21
-
-    - name: "Scraper Framework"
-      description: "Base Class für alle Scraper"
-      file: "cli/scrapers/base.py"
-      status: active
-      added: 2025-11-21
-
-    - name: "Image Stream Extractor"
-      description: "Lade Bilder von Social Media, extrahiere Events"
-      file: "cli/image_extractor.py"
-      status: active
-      added: 2025-11-21
-      highlight: true
-
-    - name: "Interactive Editor"
-      description: "CLI-Editor für Event-Erstellung aus Bildern"
-      file: "cli/image_extractor.py"
-      status: active
-      added: 2025-11-21
-      highlight: true
-
+  - name: EventManager
+    description: JSON/Markdown Save/Load, Comparison, Merge
+    file: cli/event_scraper.py
+    status: active
+    added: 2025-11-21
+  - name: Scraper Framework
+    description: Base Class für alle Scraper
+    file: cli/scrapers/base.py
+    status: active
+    added: 2025-11-21
+  - name: Image Stream Extractor
+    description: Lade Bilder von Social Media, extrahiere Events
+    file: cli/image_extractor.py
+    status: active
+    added: 2025-11-21
+    highlight: true
+  - name: Interactive Editor
+    description: CLI-Editor für Event-Erstellung aus Bildern
+    file: cli/image_extractor.py
+    status: active
+    added: 2025-11-21
+    highlight: true
   scrapers:
-    - name: "Example Venue"
-      description: "Template für eigene Scraper"
-      file: "cli/scrapers/example_venue.py"
-      status: template
-      added: 2025-11-21
-
-    - name: "GaleriehausHof (Facebook)"
-      description: "Facebook Events Scraper"
-      file: "cli/scrapers/galeriehaus_hof_facebook.py"
-      status: partial
-      added: 2025-11-21
-      requires:
-        - Selenium oder Graph API
-
-    - name: "Punk im Hof (Instagram)"
-      description: "Instagram Posts Scraper"
-      file: "cli/scrapers/punk_im_hof_instagram.py"
-      status: partial
-      added: 2025-11-21
-      requires:
-        - Instaloader oder Graph API
-
+  - name: Example Venue
+    description: Template für eigene Scraper
+    file: cli/scrapers/example_venue.py
+    status: template
+    added: 2025-11-21
+  - name: GaleriehausHof (Facebook)
+    description: Facebook Events Scraper
+    file: cli/scrapers/galeriehaus_hof_facebook.py
+    status: partial
+    added: 2025-11-21
+    requires:
+    - Selenium oder Graph API
+  - name: Punk im Hof (Instagram)
+    description: Instagram Posts Scraper
+    file: cli/scrapers/punk_im_hof_instagram.py
+    status: partial
+    added: 2025-11-21
+    requires:
+    - Instaloader oder Graph API
   automation:
-    - name: "Test Workflow"
-      description: "Multi-Python Tests (3.9-3.12)"
-      file: ".github/workflows/test.yml"
-      status: active
-      added: 2025-11-21
-
-    - name: "Scrape Workflow"
-      description: "Auto-Scraping täglich 7:00 Uhr"
-      file: ".github/workflows/scrape-events.yml"
-      status: active
-      added: 2025-11-21
-      schedule: "0 6 * * *"
-
-    - name: "Update Features Workflow"
-      description: "TODOs/Features via GitHub UI verwalten"
-      file: ".github/workflows/update-features.yml"
-      status: active
-      added: 2025-11-21
-
-    - name: "Bootstrap Workflows"
-      description: "Erstellt fehlende Workflows via GitHub Actions"
-      file: ".github/workflows/bootstrap-workflows.yml"
-      status: active
-      added: 2025-11-21
-      highlight: true
-      features:
-        - "Selektive Workflow-Erstellung"
-        - "Self-referential: Workflows erstellen Workflows"
-        - "Workaround für disabled file tools"
-      options:
-        - all
-        - auto-export-chat
-        - notify-pending-drafts
-        - create-documentation
-
-    - name: "Auto-Export Chat"
-      description: "Automatischer Chat-Export alle 6 Stunden"
-      file: ".github/workflows/auto-export-chat.yml"
-      status: pending
-      added: 2025-11-21
-      schedule: "0 */6 * * *"
-      note: "Wird via Bootstrap erstellt"
-
-    - name: "Notify Pending Drafts"
-      description: "Email-Benachrichtigung für wartende Drafts >6h"
-      file: ".github/workflows/notify-pending-drafts.yml"
-      status: pending
-      added: 2025-11-21
-      schedule: "0 */6 * * *"
-      note: "Wird via Bootstrap erstellt"
-
-    - name: "Create Documentation"
-      description: "Generiert fehlende Dokumentation on-demand"
-      file: ".github/workflows/create-documentation.yml"
-      status: pending
-      added: 2025-11-21
-      note: "Wird via Bootstrap erstellt"
-      creates:
-        - docs/NOTIFICATION_SETUP.md
-        - docs/EDITORIAL_WORKFLOW.md
-        - docs/sessions/README.md
-
+  - name: Test Workflow
+    description: Multi-Python Tests (3.9-3.12)
+    file: .github/workflows/test.yml
+    status: active
+    added: 2025-11-21
+  - name: Scrape Workflow
+    description: Auto-Scraping täglich 7:00 Uhr
+    file: .github/workflows/scrape-events.yml
+    status: active
+    added: 2025-11-21
+    schedule: 0 6 * * *
+  - name: Update Features Workflow
+    description: TODOs/Features via GitHub UI verwalten
+    file: .github/workflows/update-features.yml
+    status: active
+    added: 2025-11-21
+  - name: Bootstrap Workflows
+    description: Erstellt fehlende Workflows via GitHub Actions
+    file: .github/workflows/bootstrap-workflows.yml
+    status: active
+    added: 2025-11-21
+    highlight: true
+    features:
+    - Selektive Workflow-Erstellung
+    - 'Self-referential: Workflows erstellen Workflows'
+    - Workaround für disabled file tools
+    options:
+    - all
+    - auto-export-chat
+    - notify-pending-drafts
+    - create-documentation
+  - name: Auto-Export Chat
+    description: Automatischer Chat-Export alle 6 Stunden
+    file: .github/workflows/auto-export-chat.yml
+    status: pending
+    added: 2025-11-21
+    schedule: 0 */6 * * *
+    note: Wird via Bootstrap erstellt
+  - name: Notify Pending Drafts
+    description: Email-Benachrichtigung für wartende Drafts >6h
+    file: .github/workflows/notify-pending-drafts.yml
+    status: pending
+    added: 2025-11-21
+    schedule: 0 */6 * * *
+    note: Wird via Bootstrap erstellt
+  - name: Create Documentation
+    description: Generiert fehlende Dokumentation on-demand
+    file: .github/workflows/create-documentation.yml
+    status: pending
+    added: 2025-11-21
+    note: Wird via Bootstrap erstellt
+    creates:
+    - docs/NOTIFICATION_SETUP.md
+    - docs/EDITORIAL_WORKFLOW.md
+    - docs/sessions/README.md
   management:
-    - name: "add_todo.sh"
-      description: "CLI-Tool für schnelle TODO-Erfassung"
-      file: "scripts/add_todo.sh"
-      status: active
-      added: 2025-11-21
-      highlight: true
-      features:
-        - "Interaktive Git-Commits"
-        - "Auto-Push zu GitHub"
-        - "Farbige Ausgabe"
-        - "Flags: --command, --file, --note, --url"
-
-    - name: "export_chat.py"
-      description: "Chat-Verlauf zu PDF/A exportieren"
-      file: "scripts/export_chat.py"
-      status: active
-      added: 2025-11-21
-      highlight: true
-      features:
-        - "Markdown → PDF/A Konvertierung"
-        - "Clipboard-Support"
-        - "Multiple Formate: PDF, PDF/A, HTML, Markdown"
-        - "Metadaten: Title, Author, Date"
-        - "Durchsuchbare PDFs"
-      doc: "docs/CHAT_EXPORT_GUIDE.md"
-
-    - name: "Dashboard"
-      description: "GitHub Pages Dashboard für TODOs & Features"
-      file: "dashboard.html"
-      status: active
-      added: 2025-11-21
-      highlight: true
-      url: "https://feileberlin.github.io/krawl.foundation/dashboard.html"
-
+  - name: add_todo.sh
+    description: CLI-Tool für schnelle TODO-Erfassung
+    file: scripts/add_todo.sh
+    status: active
+    added: 2025-11-21
+    highlight: true
+    features:
+    - Interaktive Git-Commits
+    - Auto-Push zu GitHub
+    - Farbige Ausgabe
+    - 'Flags: --command, --file, --note, --url'
+  - name: export_chat.py
+    description: Chat-Verlauf zu PDF/A exportieren
+    file: scripts/export_chat.py
+    status: active
+    added: 2025-11-21
+    highlight: true
+    features:
+    - Markdown → PDF/A Konvertierung
+    - Clipboard-Support
+    - 'Multiple Formate: PDF, PDF/A, HTML, Markdown'
+    - 'Metadaten: Title, Author, Date'
+    - Durchsuchbare PDFs
+    doc: docs/CHAT_EXPORT_GUIDE.md
+  - name: Dashboard
+    description: GitHub Pages Dashboard für TODOs & Features
+    file: dashboard.html
+    status: active
+    added: 2025-11-21
+    highlight: true
+    url: https://feileberlin.github.io/krawl.foundation/dashboard.html
   documentation:
-    - name: "CHAT_EXPORT_GUIDE.md"
-      description: "Anleitung für Chat-Export & Archivierung"
-      file: "docs/CHAT_EXPORT_GUIDE.md"
-      status: active
-      added: 2025-11-21
-      covers:
-        - "Export-Methoden (VS Code, Clipboard)"
-        - "PDF/A Compliance"
-        - "Automatisierung (Git Hooks, Daily Export)"
-        - "Troubleshooting"
-
-    - name: "CLI README"
-      description: "Event Scraper CLI Dokumentation"
-      file: "cli/README.md"
-      status: active
-      added: 2025-11-21
-
-    - name: "Scripts README"
-      description: "Scripts & Automation Dokumentation"
-      file: "scripts/README.md"
-      status: active
-      added: 2025-11-21
-
-    - name: "FEATURE_REGISTRY.md"
-      description: "Markdown-Version der Feature-Liste"
-      file: "FEATURE_REGISTRY.md"
-      status: active
-      added: 2025-11-21
-      note: "Parallel zu features.yml (kann später sync'd werden)"
-
-# =============================================================================
-# PLANNED FEATURES (Roadmap)
-# =============================================================================
-
+  - name: CHAT_EXPORT_GUIDE.md
+    description: Anleitung für Chat-Export & Archivierung
+    file: docs/CHAT_EXPORT_GUIDE.md
+    status: active
+    added: 2025-11-21
+    covers:
+    - Export-Methoden (VS Code, Clipboard)
+    - PDF/A Compliance
+    - Automatisierung (Git Hooks, Daily Export)
+    - Troubleshooting
+  - name: CLI README
+    description: Event Scraper CLI Dokumentation
+    file: cli/README.md
+    status: active
+    added: 2025-11-21
+  - name: Scripts README
+    description: Scripts & Automation Dokumentation
+    file: scripts/README.md
+    status: active
+    added: 2025-11-21
+  - name: FEATURE_REGISTRY.md
+    description: Markdown-Version der Feature-Liste
+    file: FEATURE_REGISTRY.md
+    status: active
+    added: 2025-11-21
+    note: Parallel zu features.yml (kann später sync'd werden)
 roadmap:
-
   high_priority:
-    - name: "Smart Deduplication"
-      description: "Automatische Duplikat-Erkennung"
-      priority: high
-      effort: medium
-      impact: high
-
-    - name: "Filter in Bulk"
-      description: "--filter 'status==draft' für selektive Updates"
-      priority: high
-      effort: low
-      impact: medium
-
-    - name: "JSON Schema Validation"
-      description: "Event-Struktur validieren"
-      priority: medium
-      effort: low
-      impact: medium
-
+  - name: Smart Deduplication
+    description: Automatische Duplikat-Erkennung
+    priority: high
+    effort: medium
+    impact: high
+  - name: Filter in Bulk
+    description: --filter 'status==draft' für selektive Updates
+    priority: high
+    effort: low
+    impact: medium
+  - name: JSON Schema Validation
+    description: Event-Struktur validieren
+    priority: medium
+    effort: low
+    impact: medium
   medium_priority:
-    - name: "CSV Export"
-      description: "Events als CSV exportieren"
-      priority: medium
-      effort: low
-      impact: low
-
-    - name: "iCal Export"
-      description: "Events als .ics für Kalender"
-      priority: medium
-      effort: medium
-      impact: medium
-
-    - name: "Event History"
-      description: "Git-basierte Change-Tracking"
-      priority: medium
-      effort: medium
-      impact: low
-
+  - name: CSV Export
+    description: Events als CSV exportieren
+    priority: medium
+    effort: low
+    impact: low
+  - name: iCal Export
+    description: Events als .ics für Kalender
+    priority: medium
+    effort: medium
+    impact: medium
+  - name: Event History
+    description: Git-basierte Change-Tracking
+    priority: medium
+    effort: medium
+    impact: low
   low_priority:
-    - name: "Web Interface"
-      description: "Flask/FastAPI für Event-Review"
-      priority: low
-      effort: high
-      impact: medium
-      optional: true
-
-    - name: "Mobile App"
-      description: "React Native oder Flutter"
-      priority: low
-      effort: very_high
-      impact: low
-      optional: true
-
-# =============================================================================
-# STATISTICS
-# =============================================================================
-
+  - name: Web Interface
+    description: Flask/FastAPI für Event-Review
+    priority: low
+    effort: high
+    impact: medium
+    optional: true
+  - name: Mobile App
+    description: React Native oder Flutter
+    priority: low
+    effort: very_high
+    impact: low
+    optional: true
 stats:
   total_features: 26
   active_features: 21
@@ -474,5 +383,5 @@ stats:
   documentation_files: 4
   tests_passing: true
   coverage: 85
-  last_release: "1.0.0"
-  next_milestone: "1.1.0"
+  last_release: 1.0.0
+  next_milestone: 1.1.0
