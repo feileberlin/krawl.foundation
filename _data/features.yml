@@ -1,5 +1,5 @@
 metadata:
-  last_updated: 2025-11-21
+  last_updated: '2025-11-21'
   version: 1.0.0
   maintainer: feileberlin
 todos:
@@ -45,8 +45,8 @@ todos:
     status: pending
     added: 2025-11-21
     command: tests/test_event_scraper.py
-    note: Add some more same-day, next-day, next-week and next-month LoremIpsum events in debug mode
-
+    note: Add some more same-day, next-day, next-week and next-month LoremIpsum events
+      in debug mode
   low_priority:
   - task: Smart Deduplication implementieren
     status: pending
