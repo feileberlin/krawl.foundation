@@ -1,4 +1,4 @@
-name: Update Features & TODOs
+name: ✏️ TODO Manager (GitHub UI)
 
 on:
   workflow_dispatch:
