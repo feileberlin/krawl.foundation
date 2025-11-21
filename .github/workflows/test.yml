@@ -39,6 +39,7 @@ jobs:
       
       - name: Run tests with coverage
         run: |
+          export PYTHONPATH="${PYTHONPATH}:${PWD}"
           pytest tests/ -v --cov=cli --cov-report=term --cov-report=xml
       
       - name: Upload coverage to Codecov
