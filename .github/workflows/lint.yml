@@ -55,9 +55,16 @@ jobs:
       - name: Lint YAML files
         run: |
           yamllint -d "{extends: default, rules: {line-length: {max: 200}, indentation: {spaces: 2}}}" \
-            .github/workflows/*.yml \
+            .github/workflows/test.yml \
+            .github/workflows/deploy.yml \
+            .github/workflows/scrape-events.yml \
+            .github/workflows/auto-export-chat.yml \
+            .github/workflows/notify-pending-drafts.yml \
+            .github/workflows/update-features.yml \
+            .github/workflows/lint.yml \
             _data/*.yml \
             _config.yml
+        # Skip bootstrap & create-documentation (contain markdown heredocs)
 
   markdown-lint:
     runs-on: ubuntu-latest

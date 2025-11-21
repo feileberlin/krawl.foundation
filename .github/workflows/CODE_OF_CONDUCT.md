@@ -61,7 +61,7 @@ Wenn Code kaputt ist, sagen wir "das ist kaputt". Wenn eine Idee gut ist, sagen 
 Wir haben keine Jury, kein Tribunal, keine 47-Seiten-Richtlinie.
 
 **Einfache Regel:**  
-Wenn du Krawl besser machst → Welcome.  
+Wenn du Krawl besser machst → Welccome.  
 Wenn du Krawl kaputt machst oder Leute nervst → Bye.
 
 **Konsequenzen:**
