@@ -2,6 +2,11 @@ name: ⚠️ Draft Alerts (auto)
 
 on:
   workflow_call:  # Triggered by Event Bot
+    inputs:
+      threshold_hours:
+        description: 'Alert threshold (hours)'
+        type: number
+        default: 6
   workflow_dispatch:
     inputs:
       threshold_hours:
@@ -32,7 +37,7 @@ jobs:
           from pathlib import Path
           from datetime import datetime, timedelta, timezone
           
-          THRESHOLD = int("${{ github.event.inputs.threshold_hours || '6' }}")
+          THRESHOLD = int("${{ inputs.threshold_hours || '6' }}")
           drafts = []
           now = datetime.now(timezone.utc)
           
