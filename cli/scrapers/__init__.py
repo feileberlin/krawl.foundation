@@ -7,4 +7,4 @@ Jeder Scraper sollte von BaseScraper erben und die scrape() Methode implementier
 
 from .base import BaseScraper
 
-__all__ = ['BaseScraper']
+__all__ = ["BaseScraper"]

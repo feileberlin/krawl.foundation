@@ -1,4 +1,4 @@
-gh run list --workflow=auto-export-chat.yml#!/usr/bin/env python3
+#!/usr/bin/env python3
 """
 Chat History to PDF/A Exporter
 ================================
@@ -45,64 +45,56 @@ from pathlib import Path
 from datetime import datetime
 import re
 
+
 def parse_args():
     parser = argparse.ArgumentParser(
         description="Export Chat History to PDF/A",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog=__doc__
+        epilog=__doc__,
     )
-    
+
     parser.add_argument(
-        'input',
-        nargs='?',
-        help='Input Markdown file (oder --from-clipboard)'
+        "input", nargs="?", help="Input Markdown file (oder --from-clipboard)"
     )
-    
+
     parser.add_argument(
-        '-o', '--output',
-        default='chat-history.pdf',
-        help='Output PDF file (default: chat-history.pdf)'
+        "-o",
+        "--output",
+        default="chat-history.pdf",
+        help="Output PDF file (default: chat-history.pdf)",
     )
-    
+
     parser.add_argument(
-        '--from-clipboard',
-        action='store_true',
-        help='Read from clipboard instead of file'
+        "--from-clipboard",
+        action="store_true",
+        help="Read from clipboard instead of file",
     )
-    
+
+    parser.add_argument("--title", default="Chat History", help="PDF title metadata")
+
     parser.add_argument(
-        '--title',
-        default='Chat History',
-        help='PDF title metadata'
+        "--author", default="GitHub Copilot", help="PDF author metadata"
     )
-    
+
+    parser.add_argument("--date", help="Date (ISO format, default: heute)")
+
     parser.add_argument(
-        '--author',
-        default='GitHub Copilot',
-        help='PDF author metadata'
+        "--format",
+        choices=["pdf", "pdfa", "markdown", "html"],
+        default="pdfa",
+        help="Output format (default: pdfa)",
     )
-    
-    parser.add_argument(
-        '--date',
-        help='Date (ISO format, default: heute)'
-    )
-    
-    parser.add_argument(
-        '--format',
-        choices=['pdf', 'pdfa', 'markdown', 'html'],
-        default='pdfa',
-        help='Output format (default: pdfa)'
-    )
-    
+
     return parser.parse_args()
 
 
 def read_input(args):
     """Lese Input (File oder Clipboard)"""
-    
+
     if args.from_clipboard:
         try:
             import pyperclip
+
             content = pyperclip.paste()
             print("✅ Content from clipboard gelesen")
             return content
@@ -110,17 +102,17 @@ def read_input(args):
             print("❌ Error: pyperclip not installed")
             print("   pip install pyperclip")
             sys.exit(1)
-    
+
     elif args.input:
         input_path = Path(args.input)
         if not input_path.exists():
             print(f"❌ Error: File not found: {input_path}")
             sys.exit(1)
-        
-        content = input_path.read_text(encoding='utf-8')
+
+        content = input_path.read_text(encoding="utf-8")
         print(f"✅ Loaded {len(content)} chars from {input_path}")
         return content
-    
+
     else:
         print("❌ Error: Provide input file or --from-clipboard")
         sys.exit(1)
@@ -134,19 +126,13 @@ def markdown_to_html(markdown_text):
         print("❌ Error: markdown not installed")
         print("   pip install markdown")
         sys.exit(1)
-    
+
     # Extensions for better formatting
     html = markdown.markdown(
         markdown_text,
-        extensions=[
-            'fenced_code',
-            'codehilite',
-            'tables',
-            'toc',
-            'nl2br'
-        ]
+        extensions=["fenced_code", "codehilite", "tables", "toc", "nl2br"],
     )
-    
+
     return html
 
 
@@ -157,8 +143,13 @@ def html_to_pdf(html_content, output_path, metadata):
         from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
         from reportlab.lib.units import cm
         from reportlab.platypus import (
-            SimpleDocTemplate, Paragraph, Spacer, PageBreak,
-            Preformatted, Table, TableStyle
+            SimpleDocTemplate,
+            Paragraph,
+            Spacer,
+            PageBreak,
+            Preformatted,
+            Table,
+            TableStyle,
         )
         from reportlab.lib import colors
         from reportlab.lib.enums import TA_LEFT, TA_CENTER
@@ -167,89 +158,89 @@ def html_to_pdf(html_content, output_path, metadata):
         print(f"❌ Error: Missing dependency: {e}")
         print("   pip install reportlab beautifulsoup4 lxml")
         sys.exit(1)
-    
+
     # Create PDF
     doc = SimpleDocTemplate(
         str(output_path),
         pagesize=A4,
-        rightMargin=2*cm,
-        leftMargin=2*cm,
-        topMargin=2*cm,
-        bottomMargin=2*cm,
-        title=metadata['title'],
-        author=metadata['author'],
-        subject=f"Chat History {metadata['date']}"
+        rightMargin=2 * cm,
+        leftMargin=2 * cm,
+        topMargin=2 * cm,
+        bottomMargin=2 * cm,
+        title=metadata["title"],
+        author=metadata["author"],
+        subject=f"Chat History {metadata['date']}",
     )
-    
+
     # Styles
     styles = getSampleStyleSheet()
-    
+
     title_style = ParagraphStyle(
-        'CustomTitle',
-        parent=styles['Heading1'],
+        "CustomTitle",
+        parent=styles["Heading1"],
         fontSize=24,
-        textColor=colors.HexColor('#667eea'),
+        textColor=colors.HexColor("#667eea"),
         spaceAfter=30,
-        alignment=TA_CENTER
+        alignment=TA_CENTER,
     )
-    
+
     heading_style = ParagraphStyle(
-        'CustomHeading',
-        parent=styles['Heading2'],
+        "CustomHeading",
+        parent=styles["Heading2"],
         fontSize=16,
-        textColor=colors.HexColor('#764ba2'),
+        textColor=colors.HexColor("#764ba2"),
         spaceAfter=12,
-        spaceBefore=12
+        spaceBefore=12,
     )
-    
+
     code_style = ParagraphStyle(
-        'Code',
-        parent=styles['Code'],
+        "Code",
+        parent=styles["Code"],
         fontSize=9,
         leftIndent=20,
-        backColor=colors.HexColor('#f4f4f4'),
-        borderColor=colors.HexColor('#ddd'),
+        backColor=colors.HexColor("#f4f4f4"),
+        borderColor=colors.HexColor("#ddd"),
         borderWidth=1,
-        borderPadding=10
+        borderPadding=10,
     )
-    
+
     # Parse HTML
-    soup = BeautifulSoup(html_content, 'html.parser')
-    
+    soup = BeautifulSoup(html_content, "html.parser")
+
     # Build story
     story = []
-    
+
     # Title page
-    story.append(Paragraph(metadata['title'], title_style))
-    story.append(Spacer(1, 0.5*cm))
-    story.append(Paragraph(f"Author: {metadata['author']}", styles['Normal']))
-    story.append(Paragraph(f"Date: {metadata['date']}", styles['Normal']))
-    story.append(Spacer(1, 1*cm))
+    story.append(Paragraph(metadata["title"], title_style))
+    story.append(Spacer(1, 0.5 * cm))
+    story.append(Paragraph(f"Author: {metadata['author']}", styles["Normal"]))
+    story.append(Paragraph(f"Date: {metadata['date']}", styles["Normal"]))
+    story.append(Spacer(1, 1 * cm))
     story.append(PageBreak())
-    
+
     # Content
-    for element in soup.find_all(['h1', 'h2', 'h3', 'p', 'pre', 'code', 'ul', 'ol']):
-        
-        if element.name in ['h1', 'h2', 'h3']:
+    for element in soup.find_all(["h1", "h2", "h3", "p", "pre", "code", "ul", "ol"]):
+
+        if element.name in ["h1", "h2", "h3"]:
             story.append(Paragraph(element.get_text(), heading_style))
-        
-        elif element.name == 'pre':
+
+        elif element.name == "pre":
             code_text = element.get_text()
             story.append(Preformatted(code_text, code_style))
-            story.append(Spacer(1, 0.3*cm))
-        
-        elif element.name == 'p':
+            story.append(Spacer(1, 0.3 * cm))
+
+        elif element.name == "p":
             text = element.get_text()
             if text.strip():
-                story.append(Paragraph(text, styles['Normal']))
-                story.append(Spacer(1, 0.2*cm))
-        
-        elif element.name in ['ul', 'ol']:
-            for li in element.find_all('li'):
+                story.append(Paragraph(text, styles["Normal"]))
+                story.append(Spacer(1, 0.2 * cm))
+
+        elif element.name in ["ul", "ol"]:
+            for li in element.find_all("li"):
                 text = "• " + li.get_text()
-                story.append(Paragraph(text, styles['Normal']))
-            story.append(Spacer(1, 0.2*cm))
-    
+                story.append(Paragraph(text, styles["Normal"]))
+            story.append(Spacer(1, 0.2 * cm))
+
     # Build PDF
     doc.build(story)
     print(f"✅ PDF created: {output_path}")
@@ -263,30 +254,32 @@ def convert_to_pdfa(pdf_path):
         print("⚠️  Warning: pypdf not installed, skipping PDF/A conversion")
         print("   pip install pypdf")
         return
-    
+
     # Note: Full PDF/A compliance requires Ghostscript
     # This is a simplified approach
-    
+
     reader = PdfReader(pdf_path)
     writer = PdfWriter()
-    
+
     for page in reader.pages:
         writer.add_page(page)
-    
+
     # Add PDF/A metadata
-    writer.add_metadata({
-        '/Title': 'Chat History',
-        '/Author': 'GitHub Copilot',
-        '/Subject': 'Development Session Chat',
-        '/Keywords': 'krawl.foundation, chat, development',
-        '/Creator': 'export_chat.py',
-    })
-    
+    writer.add_metadata(
+        {
+            "/Title": "Chat History",
+            "/Author": "GitHub Copilot",
+            "/Subject": "Development Session Chat",
+            "/Keywords": "krawl.foundation, chat, development",
+            "/Creator": "export_chat.py",
+        }
+    )
+
     # Write
-    pdfa_path = pdf_path.replace('.pdf', '-PDFA.pdf')
-    with open(pdfa_path, 'wb') as f:
+    pdfa_path = pdf_path.replace(".pdf", "-PDFA.pdf")
+    with open(pdfa_path, "wb") as f:
         writer.write(f)
-    
+
     print(f"✅ PDF/A created: {pdfa_path}")
     print("⚠️  Note: For full PDF/A compliance, use Ghostscript:")
     print(f"   gs -dPDFA=1 -sProcessColorModel=DeviceRGB -o {pdfa_path} {pdf_path}")
@@ -294,31 +287,31 @@ def convert_to_pdfa(pdf_path):
 
 def main():
     args = parse_args()
-    
+
     print("🚀 Chat History Exporter")
     print("=" * 50)
-    
+
     # Read input
     content = read_input(args)
-    
+
     # Metadata
     metadata = {
-        'title': args.title,
-        'author': args.author,
-        'date': args.date or datetime.now().strftime('%Y-%m-%d')
+        "title": args.title,
+        "author": args.author,
+        "date": args.date or datetime.now().strftime("%Y-%m-%d"),
     }
-    
+
     output_path = Path(args.output)
-    
+
     # Export based on format
-    if args.format == 'markdown':
-        output_path = output_path.with_suffix('.md')
-        output_path.write_text(content, encoding='utf-8')
+    if args.format == "markdown":
+        output_path = output_path.with_suffix(".md")
+        output_path.write_text(content, encoding="utf-8")
         print(f"✅ Markdown saved: {output_path}")
-    
-    elif args.format == 'html':
+
+    elif args.format == "html":
         html = markdown_to_html(content)
-        
+
         # Full HTML document
         full_html = f"""
 <!DOCTYPE html>
@@ -342,20 +335,20 @@ def main():
 </body>
 </html>
 """
-        output_path = output_path.with_suffix('.html')
-        output_path.write_text(full_html, encoding='utf-8')
+        output_path = output_path.with_suffix(".html")
+        output_path.write_text(full_html, encoding="utf-8")
         print(f"✅ HTML saved: {output_path}")
-    
-    elif args.format in ['pdf', 'pdfa']:
+
+    elif args.format in ["pdf", "pdfa"]:
         html = markdown_to_html(content)
         html_to_pdf(html, output_path, metadata)
-        
-        if args.format == 'pdfa':
+
+        if args.format == "pdfa":
             convert_to_pdfa(output_path)
-    
+
     print("=" * 50)
     print("✅ Export completed!")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
