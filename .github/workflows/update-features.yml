@@ -35,6 +35,9 @@ on:
         required: false
         type: string
 
+permissions:
+  contents: write
+
 jobs:
   update-features:
     runs-on: ubuntu-latest

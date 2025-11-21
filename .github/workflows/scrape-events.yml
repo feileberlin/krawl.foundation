@@ -24,6 +24,9 @@ on:
   #     - 'cli/**'
   #     - '.github/workflows/scrape-events.yml'
 
+permissions:
+  contents: write
+
 jobs:
   scrape:
     runs-on: ubuntu-latest
