@@ -1,0 +1,199 @@
+---
+# Frontmatter für index.html (wird von Jekyll verarbeitet)
+layout: base
+title: "Event-Übersicht"
+---
+
+<!-- ========================================
+     HOMEPAGE: EVENT-LISTE
+     
+     Zeigt alle veröffentlichten Events
+     sortiert nach Datum
+     ======================================== -->
+
+<section class="events-overview">
+    <!-- ========================================
+         HEADER mit Filtern (später)
+         ======================================== -->
+    <header class="page-header">
+        <h1>Kommende Events</h1>
+        <p class="subtitle">
+            {% assign event_count = site.events | where: "published", true | size %}
+            {{ event_count }} Event{% if event_count != 1 %}s{% endif %} in deiner Nähe
+        </p>
+    </header>
+    
+    <!-- ========================================
+         FILTER & SUCHE (Phase 2)
+         ======================================== -->
+    {% if site.features.search or site.features.filters %}
+    <aside class="filters">
+        {% if site.features.search %}
+        <div class="search-box">
+            <input type="search" 
+                   id="event-search" 
+                   placeholder="Events suchen..."
+                   aria-label="Events suchen">
+        </div>
+        {% endif %}
+        
+        {% if site.features.filters %}
+        <div class="filter-buttons">
+            <button class="filter-btn active" data-filter="all">Alle</button>
+            <button class="filter-btn" data-filter="heute">Heute</button>
+            <button class="filter-btn" data-filter="wochenende">Wochenende</button>
+            <button class="filter-btn" data-filter="kostenlos">Kostenlos</button>
+        </div>
+        {% endif %}
+    </aside>
+    {% endif %}
+    
+    <!-- ========================================
+         EVENT-LISTE
+         ======================================== -->
+    <div class="events-list">
+        {% comment %}
+        Sortiere Events:
+        1. Veröffentlichte Events (published: true)
+        2. Sortiert nach Datum (älteste zuerst)
+        3. Nur zukünftige Events (date >= heute)
+        {% endcomment %}
+        
+        {% assign now = 'now' | date: '%s' %}
+        {% assign upcoming_events = site.events 
+            | where: "published", true 
+            | sort: "date" %}
+        
+        {% assign has_events = false %}
+        
+        {% for event in upcoming_events %}
+            {% assign event_timestamp = event.date | date: '%s' %}
+            
+            {% comment %}
+            Zeige nur zukünftige Events (außer im Debug-Modus)
+            {% endcomment %}
+            {% if site.debug or event_timestamp >= now %}
+                {% assign has_events = true %}
+                
+                <!-- Event-Card -->
+                <article class="event-card" 
+                         data-event-id="{{ event.id }}"
+                         data-date="{{ event.date | date: '%Y-%m-%d' }}"
+                         {% if event.categories %}
+                         data-categories="{{ event.categories | join: ',' }}"
+                         {% endif %}>
+                    
+                    <!-- Status-Badges -->
+                    {% if event.featured or event.sold_out or event.cancelled %}
+                    <div class="card-badges">
+                        {% if event.featured %}
+                        <span class="badge badge-featured">⭐</span>
+                        {% endif %}
+                        {% if event.sold_out %}
+                        <span class="badge badge-sold-out">Ausverkauft</span>
+                        {% endif %}
+                        {% if event.cancelled %}
+                        <span class="badge badge-cancelled">Abgesagt</span>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Event-Content -->
+                    <div class="card-content">
+                        <!-- Datum -->
+                        <time class="card-date" datetime="{{ event.date | date_to_xmlschema }}">
+                            <span class="date-day">{{ event.date | date: "%d" }}</span>
+                            <span class="date-month">{{ event.date | date: "%b" }}</span>
+                        </time>
+                        
+                        <!-- Info -->
+                        <div class="card-info">
+                            <h2 class="card-title">
+                                <a href="{{ event.url | relative_url }}">{{ event.title }}</a>
+                            </h2>
+                            
+                            <!-- Meta -->
+                            <div class="card-meta">
+                                <span class="meta-time">
+                                    🕒 {{ event.date | date: "%H:%M" }} Uhr
+                                </span>
+                                
+                                {% if event.location %}
+                                <span class="meta-location">
+                                    📍 {{ event.location.name }}
+                                </span>
+                                {% endif %}
+                                
+                                {% if event.price %}
+                                <span class="meta-price">
+                                    💰 {{ event.price }}
+                                </span>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Excerpt -->
+                            {% if event.excerpt %}
+                            <p class="card-excerpt">
+                                {{ event.excerpt | strip_html | truncate: 120 }}
+                            </p>
+                            {% endif %}
+                            
+                            <!-- Kategorien -->
+                            {% if event.categories %}
+                            <div class="card-categories">
+                                {% for category in event.categories limit:3 %}
+                                <span class="category">{{ category }}</span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Actions -->
+                    <footer class="card-actions">
+                        <a href="{{ event.url | relative_url }}" class="button button-small">
+                            Details
+                        </a>
+                        
+                        {% if site.features.bookmarks %}
+                        <button class="button button-bookmark-icon" 
+                                data-event-id="{{ event.id }}"
+                                aria-label="Event merken">
+                            ⭐
+                        </button>
+                        {% endif %}
+                    </footer>
+                </article>
+            {% endif %}
+        {% endfor %}
+        
+        <!-- Keine Events gefunden -->
+        {% unless has_events %}
+        <div class="no-events">
+            <p>🎭 Aktuell keine kommenden Events.</p>
+            <p>
+                <small>
+                    Schau später nochmal vorbei oder 
+                    <a href="{{ site.github.repository_url }}/issues">melde ein Event</a>.
+                </small>
+            </p>
+        </div>
+        {% endunless %}
+    </div>
+    
+    <!-- ========================================
+         PAGINATION (später, Phase 3)
+         ======================================== -->
+    <!-- TODO: Pagination für > 20 Events -->
+</section>
+
+<!-- ========================================
+     SIDEBAR (Optional: Featured, Kategorien)
+     ======================================== -->
+{% comment %}
+<aside class="sidebar">
+    <!-- Featured Events -->
+    <!-- Kategorien-Cloud -->
+    <!-- RSS-Link -->
+</aside>
+{% endcomment %}

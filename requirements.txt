@@ -1,0 +1,48 @@
+# ============================================================================
+# Python Dependencies - krawl.foundation Event Scraper CLI
+# ============================================================================
+# Installation: pip install -r requirements.txt
+# Empfohlen: Virtual Environment nutzen (python -m venv venv)
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# CORE DEPENDENCIES
+# ----------------------------------------------------------------------------
+
+# YAML Parsing (für Markdown Frontmatter)
+PyYAML>=6.0
+
+# HTTP Requests (für Web-Scraping)
+requests>=2.31.0
+
+# HTML Parsing (für Event-Scraping)
+beautifulsoup4>=4.12.0
+lxml>=5.0.0
+
+# Date/Time Handling
+python-dateutil>=2.8.2
+
+# Test Data Generation (Lorem Ipsum)
+faker>=20.0.0
+
+# ----------------------------------------------------------------------------
+# OPTIONAL: WEB SCRAPING (erweitert)
+# ----------------------------------------------------------------------------
+
+# Browser-Automation (falls JavaScript nötig - auskommentiert)
+# selenium>=4.15.0
+
+# ----------------------------------------------------------------------------
+# DEVELOPMENT TOOLS
+# ----------------------------------------------------------------------------
+
+# Code Quality
+black>=23.0.0
+
+# Testing
+pytest>=7.4.0
+pytest-cov>=4.1.0
+
+# ----------------------------------------------------------------------------
+# ENDE
+# ============================================================================

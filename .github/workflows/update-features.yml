@@ -1,0 +1,149 @@
+name: Update Features & TODOs
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Action'
+        required: true
+        type: choice
+        options:
+          - add_todo_high
+          - add_todo_medium
+          - add_todo_low
+          - complete_todo
+          - add_feature
+          - update_stats
+      
+      task:
+        description: 'Task/Feature title'
+        required: false
+        type: string
+      
+      description:
+        description: 'Description (optional)'
+        required: false
+        type: string
+      
+      file:
+        description: 'File path (optional)'
+        required: false
+        type: string
+      
+      command:
+        description: 'Command (optional)'
+        required: false
+        type: string
+
+jobs:
+  update-features:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install PyYAML
+        run: pip install pyyaml
+      
+      - name: Update features.yml
+        run: |
+          python3 << 'EOF'
+          import yaml
+          from datetime import datetime
+          
+          # Load current features
+          with open('_data/features.yml', 'r') as f:
+              data = yaml.safe_load(f)
+          
+          action = "${{ inputs.action }}"
+          task = "${{ inputs.task }}"
+          description = "${{ inputs.description }}"
+          file_path = "${{ inputs.file }}"
+          command = "${{ inputs.command }}"
+          
+          today = datetime.now().strftime('%Y-%m-%d')
+          
+          # Add TODO
+          if action.startswith('add_todo_'):
+              priority = action.replace('add_todo_', '')
+              key = f"{priority}_priority"
+              
+              new_todo = {
+                  'task': task,
+                  'status': 'pending',
+                  'added': today
+              }
+              
+              if description:
+                  new_todo['note'] = description
+              if file_path:
+                  new_todo['file'] = file_path
+              if command:
+                  new_todo['command'] = command
+              
+              data['todos'][key].append(new_todo)
+              print(f"✅ Added TODO to {key}: {task}")
+          
+          # Complete TODO
+          elif action == 'complete_todo':
+              # Move from any priority to completed
+              for priority in ['high_priority', 'medium_priority', 'low_priority', 'nice_to_have']:
+                  todos = data['todos'][priority]
+                  for i, todo in enumerate(todos):
+                      if todo['task'] == task:
+                          todo['status'] = 'done'
+                          todo['completed'] = today
+                          data['todos']['completed'].append(todo)
+                          todos.pop(i)
+                          print(f"✅ Completed TODO: {task}")
+                          break
+          
+          # Add Feature
+          elif action == 'add_feature':
+              category = input("Category (cli_commands/core_features/scrapers/automation): ")
+              new_feature = {
+                  'name': task,
+                  'description': description or '',
+                  'status': 'active',
+                  'added': today
+              }
+              
+              if file_path:
+                  new_feature['file'] = file_path
+              
+              data['features'][category].append(new_feature)
+              print(f"✅ Added feature to {category}: {task}")
+          
+          # Update metadata
+          data['metadata']['last_updated'] = today
+          
+          # Save
+          with open('_data/features.yml', 'w') as f:
+              yaml.dump(data, f, default_flow_style=False, allow_unicode=True, sort_keys=False)
+          
+          print("✅ Updated _data/features.yml")
+          EOF
+      
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add _data/features.yml
+          git commit -m "feat: Update features.yml - ${{ inputs.action }}: ${{ inputs.task }}" || echo "No changes"
+          git push
+      
+      - name: Summary
+        run: |
+          echo "### ✅ Features Updated" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Action:** ${{ inputs.action }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Task:** ${{ inputs.task }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Date:** $(date +'%Y-%m-%d %H:%M')" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Dashboard: https://feileberlin.github.io/krawl.foundation/dashboard.html" >> $GITHUB_STEP_SUMMARY

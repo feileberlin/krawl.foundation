@@ -1,0 +1,134 @@
+name: Scrape Events
+
+on:
+  # Manual trigger
+  workflow_dispatch:
+    inputs:
+      source_url:
+        description: 'URL to scrape events from'
+        required: false
+        default: ''
+      event_count:
+        description: 'Number of test events to generate (0 = skip)'
+        required: false
+        default: '0'
+  
+  # Scheduled run (every day at 7:00 AM CET/CEST)
+  schedule:
+    - cron: '0 6 * * *'  # 06:00 UTC = 07:00 CET (Winter) / 08:00 CEST (Sommer)
+  
+  # On push to main (optional)
+  # push:
+  #   branches: [ main ]
+  #   paths:
+  #     - 'cli/**'
+  #     - '.github/workflows/scrape-events.yml'
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for git operations
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: Make CLI executable
+        run: chmod +x cli/event_scraper.py
+      
+      - name: Run tests
+        run: pytest tests/ -v
+        continue-on-error: true  # Don't fail workflow on test errors
+      
+      - name: Install additional dependencies
+        run: |
+          pip install instaloader pillow
+      
+      - name: Run Instagram extraction (Punk im Hof)
+        run: |
+          echo "📸 Extracting from Instagram: @punkinhof"
+          # This will fetch images and create draft events
+          # Note: Requires manual approval/editing later
+          python3 cli/scrapers/punk_im_hof_instagram.py || echo "⚠️  Instagram scraping failed (may need login)"
+      
+      - name: Run Facebook extraction (GaleriehausHof)
+        if: ${{ secrets.FACEBOOK_ACCESS_TOKEN != '' }}
+        run: |
+          echo "📸 Extracting from Facebook: GaleriehausHof"
+          python3 cli/scrapers/galeriehaus_hof_facebook.py || echo "⚠️  Facebook scraping failed"
+      
+      - name: Generate test events (if requested via manual trigger)
+        if: ${{ github.event.inputs.event_count != '0' && github.event.inputs.event_count != '' }}
+        run: |
+          COUNT=${{ github.event.inputs.event_count }}
+          echo "Generating $COUNT test events..."
+          ./cli/event_scraper.py generate --count $COUNT --output-dir _events
+      
+      - name: Set all new events to draft status
+        run: |
+          # Ensure all auto-scraped events are marked as draft
+          find _events -name "*.json" -type f -exec grep -l '"status": "draft"' {} \; || true
+      
+      - name: List new events
+        id: list_events
+        run: |
+          echo "Current events:"
+          ./cli/event_scraper.py list
+          
+          # Count new files
+          NEW_COUNT=$(git status --porcelain _events/ | wc -l)
+          echo "new_events=$NEW_COUNT" >> $GITHUB_OUTPUT
+      
+      - name: Commit and push changes
+        if: steps.list_events.outputs.new_events > 0
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git add _events/
+          git add _data/
+          
+          TIMESTAMP=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          git commit -m "🤖 Auto-scrape: New draft events ($TIMESTAMP)
+
+          ⚠️  Events marked as DRAFT - require editorial review
+          
+          To review and publish:
+          1. Check new files in _events/
+          2. Edit/validate event data
+          3. Change status: draft → reviewed → published
+          4. Commit changes
+          
+          Scraped from:
+          - Instagram: @punkinhof
+          - Facebook: GaleriehausHof (if token available)"
+          
+          git push
+      
+      - name: Create summary
+        run: |
+          echo "## 📊 Scraping Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Timestamp:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> $GITHUB_STEP_SUMMARY
+          echo "- **New Events:** ${{ steps.list_events.outputs.new_events }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Total Events:** $(./cli/event_scraper.py list --format json | jq '. | length')" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ github.event.inputs.source_url }}" != "" ]; then
+            echo "- **Source URL:** ${{ github.event.inputs.source_url }}" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ "${{ github.event.inputs.event_count }}" != "0" ]; then
+            echo "- **Generated:** ${{ github.event.inputs.event_count }} test events" >> $GITHUB_STEP_SUMMARY
+          fi

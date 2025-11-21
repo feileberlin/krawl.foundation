@@ -1,0 +1,213 @@
+# ============================================================================
+# KRAWL.FOUNDATION - Jekyll Konfiguration
+# ============================================================================
+# Diese Datei steuert das gesamte Jekyll-Build-System.
+# Jede Einstellung ist ausführlich kommentiert für Anfänger.
+#
+# Dokumentation: https://jekyllrb.com/docs/configuration/
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# SITE METADATA (Sichtbar in HTML <head>, RSS Feeds, etc.)
+# ----------------------------------------------------------------------------
+
+title: "krawl.foundation"
+description: >
+  Lernprojekt: Event-Plattform von Grund auf neu strukturiert.
+  KISS-Prinzip, debugfreundlich, zukunftssicher.
+
+# WICHTIG: Für GitHub Pages muss dies mit deinem Repository-Namen übereinstimmen
+# Format: https://username.github.io/repository-name/
+# Für Custom Domain (z.B. krawl.foundation): baseurl: ""
+baseurl: ""
+
+# URL deiner Website (ohne baseurl)
+# Für GitHub Pages: https://username.github.io
+# Für Custom Domain: https://krawl.foundation
+url: "https://feileberlin.github.io"
+
+# Autor-Informationen (für Meta-Tags, RSS)
+author:
+  name: "feileberlin"
+  email: "your-email@example.com"  # Optional
+  github: "feileberlin"
+
+# Zeitzone (für Datum/Zeit in Posts)
+# Liste: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+timezone: Europe/Berlin
+
+# Sprache der Website (für <html lang="...">)
+lang: de
+
+# ----------------------------------------------------------------------------
+# BUILD SETTINGS
+# ----------------------------------------------------------------------------
+
+# Markdown-Processor (Standardmäßig: kramdown)
+markdown: kramdown
+
+# Syntax-Highlighting (für Code-Blöcke in Markdown)
+highlighter: rouge
+
+# Jekyll Theme (wir nutzen KEIN vorgefertigtes Theme)
+# theme: none  # Kommentiert = Eigenes Layout
+
+# Permalink-Struktur für Posts/Events
+# :title = Dateiname ohne Datum
+# :categories = Kategorien aus Frontmatter
+permalink: /events/:title/
+
+# ----------------------------------------------------------------------------
+# COLLECTIONS (Custom Content-Types)
+# ----------------------------------------------------------------------------
+# Collections sind wie Posts, aber für eigene Content-Typen.
+# Hier: Events sind Markdown-Dateien in _events/
+
+collections:
+  events:
+    output: true          # Erstellt HTML-Seiten für jedes Event
+    permalink: /events/:title/
+    sort_by: date         # Sortierung nach Datum
+
+# ----------------------------------------------------------------------------
+# DEFAULTS (Frontmatter-Vorgaben für alle Dateien)
+# ----------------------------------------------------------------------------
+# Spart Copy-Paste in jedem Event - Layout wird automatisch gesetzt
+
+defaults:
+  - scope:
+      path: ""           # Gilt für alle Dateien
+      type: "events"     # ...vom Typ "events"
+    values:
+      layout: "event"    # Nutze _layouts/event.html
+      published: false   # Standardmäßig Entwurf (Sicherheit!)
+
+  - scope:
+      path: ""
+      type: "posts"      # Falls wir später Blog-Posts haben
+    values:
+      layout: "post"
+
+# ----------------------------------------------------------------------------
+# PLUGINS (Jekyll-Erweiterungen)
+# ----------------------------------------------------------------------------
+# Plugins erweitern Jekyll um zusätzliche Features.
+# GitHub Pages erlaubt nur bestimmte Plugins:
+# https://pages.github.com/versions/
+
+plugins:
+  - jekyll-feed        # RSS Feed Generator
+  - jekyll-sitemap     # Sitemap.xml für Suchmaschinen
+  - jekyll-seo-tag     # SEO Meta-Tags
+
+# jekyll-feed Konfiguration
+feed:
+  path: feed.xml
+  collections:
+    events:
+      path: /events/feed.xml
+
+# ----------------------------------------------------------------------------
+# EXCLUDE FILES (Nicht in _site/ kopieren)
+# ----------------------------------------------------------------------------
+# Diese Dateien sollen NICHT veröffentlicht werden
+
+exclude:
+  - README.md
+  - CONTRIBUTING.md
+  - LICENSE
+  - Gemfile
+  - Gemfile.lock
+  - node_modules/
+  - vendor/
+  - scripts/           # Development-Scripts
+  - docs/              # Developer-Dokumentation
+  - .env               # Environment-Variablen (Secrets!)
+  - .env.example
+  - "*.sh"             # Shell-Scripts
+  - "*.py"             # Python-Scripts
+  - .git/
+  - .github/
+
+# ----------------------------------------------------------------------------
+# INCLUDE FILES (Explizit INcludieren, trotz Punkt-Prefix)
+# ----------------------------------------------------------------------------
+# Dateien mit . am Anfang werden normalerweise ignoriert
+
+include:
+  - .htaccess          # Falls Apache-Server
+  - .well-known/       # Für Webfinger (Federation)
+
+# ----------------------------------------------------------------------------
+# SASS/SCSS SETTINGS (CSS-Preprocessing)
+# ----------------------------------------------------------------------------
+
+sass:
+  style: compressed    # Komprimiert CSS (kleinere Dateien)
+  # Alternative: expanded (für Debugging)
+
+# ----------------------------------------------------------------------------
+# CUSTOM VARIABLES (Projekt-spezifisch)
+# ----------------------------------------------------------------------------
+# Diese Variablen kannst du in Liquid-Templates nutzen: {{ site.project.version }}
+
+project:
+  version: "0.1.0-alpha"
+  status: "In Entwicklung"
+  phase: "Foundation"
+  
+# Debug-Modus (ausführliche Logs, Test-Daten sichtbar)
+debug: true
+
+# GitHub-Integration
+github:
+  repository: "feileberlin/krawl.foundation"
+  branch: "main"
+
+# Community-Einstellungen (später für Multi-Community-Support)
+community:
+  name: "krawl.foundation"
+  tagline: "Event-Plattform für alle"
+  
+# Karten-Integration (später für Leaflet.js)
+map:
+  enabled: false       # Noch nicht implementiert
+  center:
+    lat: 52.5200      # Berlin
+    lng: 13.4050
+  zoom: 12
+
+# Feature-Flags (Features an/aus schalten ohne Code zu ändern)
+features:
+  bookmarks: false     # Bookmark-System
+  search: false        # Suche
+  filters: false       # Event-Filter
+  rss: true           # RSS-Feed (via jekyll-feed)
+  federation: false    # ActivityPub (v2.0+)
+
+# ----------------------------------------------------------------------------
+# DEVELOPMENT SETTINGS
+# ----------------------------------------------------------------------------
+
+# Live-Reload im Browser beim Speichern (nur lokal)
+livereload: true
+
+# Zeige Entwürfe (published: false) im lokalen Build
+show_drafts: true
+
+# Zeige zukünftige Posts (date > heute)
+future: true
+
+# Incremental Build (nur geänderte Dateien)
+# ACHTUNG: Kann manchmal zu Inkonsistenzen führen
+incremental: false
+
+# Verbose Output (ausführliche Build-Logs)
+# Hilfreich für Debugging
+# verbose: true
+
+# ----------------------------------------------------------------------------
+# ENDE DER KONFIGURATION
+# ----------------------------------------------------------------------------
+# Nach Änderungen: Jekyll-Server neu starten (Ctrl+C, dann ./scripts/dev.sh)
+# _config.yml wird NICHT live-reloaded!

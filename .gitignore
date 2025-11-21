@@ -1,0 +1,168 @@
+# ============================================================================
+# .gitignore - krawl.foundation
+# ============================================================================
+# Definiert Dateien/Ordner, die NICHT in Git committed werden sollen.
+#
+# Kategorien:
+#   - Jekyll Build Output
+#   - Ruby/Bundler
+#   - Python
+#   - IDEs
+#   - OS-specific
+#   - Secrets
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# JEKYLL BUILD OUTPUT
+# ----------------------------------------------------------------------------
+_site/                  # Jekyll Build-Ordner (wird generiert)
+.jekyll-cache/          # Jekyll Cache
+.jekyll-metadata        # Incremental Build Metadata
+.sass-cache/            # SASS Cache
+
+# ----------------------------------------------------------------------------
+# RUBY / BUNDLER
+# ----------------------------------------------------------------------------
+vendor/                 # Bundler installiert hier (bei --path vendor)
+.bundle/                # Bundler Config
+Gemfile.lock           # Wird automatisch generiert (kann committiert werden)
+*.gem                   # Ruby Gems
+
+# ----------------------------------------------------------------------------
+# PYTHON
+# ----------------------------------------------------------------------------
+.venv/                  # Virtual Environment
+venv/
+env/
+__pycache__/            # Python Bytecode Cache
+*.py[cod]
+*.egg-info/
+dist/
+build/
+
+# ----------------------------------------------------------------------------
+# NODE.JS (falls später genutzt)
+# ----------------------------------------------------------------------------
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json       # Nur committen wenn npm benutzt wird
+yarn.lock               # Nur committen wenn yarn benutzt wird
+
+# ----------------------------------------------------------------------------
+# ENVIRONMENT VARIABLES (SECRETS!)
+# ----------------------------------------------------------------------------
+.env                    # Lokale Environment-Variablen
+.env.local
+.env.*.local
+
+# WICHTIG: Niemals Secrets committen!
+# API Keys, Tokens, Passwörter gehören in .env
+
+# ----------------------------------------------------------------------------
+# IDEs & EDITOREN
+# ----------------------------------------------------------------------------
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# JetBrains (RubyMine, PyCharm, etc.)
+.idea/
+*.iml
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+\#*\#
+.\#*
+
+# ----------------------------------------------------------------------------
+# OS-SPECIFIC
+# ----------------------------------------------------------------------------
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+.directory
+*~
+
+# ----------------------------------------------------------------------------
+# LOGS & TEMPORARY FILES
+# ----------------------------------------------------------------------------
+*.log
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# ----------------------------------------------------------------------------
+# TESTING
+# ----------------------------------------------------------------------------
+coverage/
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+
+# ----------------------------------------------------------------------------
+# DOCUMENTATION (Generated)
+# ----------------------------------------------------------------------------
+# Falls Dokumentation automatisch generiert wird
+# docs/_build/
+# docs/.doctrees/
+
+# ----------------------------------------------------------------------------
+# CUSTOM PROJECT FILES
+# ----------------------------------------------------------------------------
+
+# Event-Backups (falls Script Backups erstellt)
+_events/_backup/
+_events/.backup/
+
+# Test-Events (generiert von test-scripts)
+_events/*-test-*.md
+
+# Scraping-Temp-Files
+scripts/scraper/.cache/
+scripts/scraper/temp/
+
+# ----------------------------------------------------------------------------
+# DEPLOYMENT
+# ----------------------------------------------------------------------------
+
+# GitHub Pages nutzt _site/ automatisch, aber wir ignorieren es lokal
+# Falls andere Deployment-Tools genutzt werden:
+.deploy/
+.publish/
+
+# ----------------------------------------------------------------------------
+# SONSTIGES
+# ----------------------------------------------------------------------------
+
+# macOS Spotlight
+.Spotlight-V100
+.Trashes
+
+# Windows Thumbnail Cache
+ehthumbs_vista.db
+
+# Folder config file (Windows)
+[Dd]esktop.ini
