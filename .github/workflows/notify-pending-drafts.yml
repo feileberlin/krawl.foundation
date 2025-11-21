@@ -1,8 +1,7 @@
-name: ⚠️ Draft Alerts (triggered 4/d)
+name: ⚠️ Draft Alerts (auto)
 
 on:
-  schedule:
-    - cron: '0 */6 * * *'
+  workflow_call:  # Triggered by Event Bot
   workflow_dispatch:
     inputs:
       threshold_hours:

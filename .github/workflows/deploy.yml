@@ -20,7 +20,7 @@
 
 # 20251121151800 deplying this workflowagain from Github Frontend SCS
 
-name: 🚀 Deploy Live (triggered by push)
+name: 🚀 Deploy Live (pushed)
 
 on:
   # Automatisch bei Push auf main

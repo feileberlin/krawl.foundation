@@ -1,4 +1,4 @@
-name: 🔄 New Workflow (manual when needed)
+name: 🔄 A New Workflow (MANUAL when needed)
 
 on:
   workflow_dispatch:

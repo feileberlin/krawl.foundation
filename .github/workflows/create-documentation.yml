@@ -1,6 +1,11 @@
-name: 📚 Doc Generator (manual when needed)
+name: 📚 Doc Generator (pushed)
 
 on:
+  push:
+    branches: ["main"]
+    paths:
+      - 'docs/**'
+      - '.github/workflows/create-documentation.yml'
   workflow_dispatch:
     inputs:
       doc_type:

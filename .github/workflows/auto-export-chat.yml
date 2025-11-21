@@ -1,8 +1,8 @@
-name: 💬 Chat Archive (triggered 2/h)
+name: 💬 Chat Archive (twice an hour)
 
 on:
   schedule:
-    - cron: '0 */6 * * *'
+    - cron: '0,30 * * * *'  # Twice an hour: :00 and :30
   workflow_dispatch:
     inputs:
       source:

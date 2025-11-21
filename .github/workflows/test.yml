@@ -1,4 +1,4 @@
-name: 🧪 Tests (triggered by push)
+name: 🧪 Dev Tests (before push)
 
 on:
   push:

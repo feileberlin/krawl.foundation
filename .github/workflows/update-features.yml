@@ -1,6 +1,10 @@
-name: ✏️ Feature Registry (auto and manual)
+name: ✏️ Feature Registry (pushed and MANUAL)
 
 on:
+  push:
+    branches: ["main"]
+    paths:
+      - '_data/features.yml'
   workflow_dispatch:
     inputs:
       action:

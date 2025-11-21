@@ -1,4 +1,4 @@
-name: 🤖 Event Bot (triggered 1/d)
+name: 🤖 Event Bot (3 am/pm)
 
 on:
   # Manual trigger
@@ -13,9 +13,9 @@ on:
         required: false
         default: '0'
   
-  # Scheduled run (every day at 7:00 AM CET/CEST)
+  # Scheduled run at 3am and 3pm
   schedule:
-    - cron: '0 6 * * *'  # 06:00 UTC = 07:00 CET (Winter) / 08:00 CEST (Sommer)
+    - cron: '0 3,15 * * *'  # 03:00 and 15:00 UTC
   
   # On push to main (optional)
   # push:
@@ -135,3 +135,9 @@ jobs:
           if [ "${{ github.event.inputs.event_count }}" != "0" ]; then
             echo "- **Generated:** ${{ github.event.inputs.event_count }} test events" >> $GITHUB_STEP_SUMMARY
           fi
+  
+  # Trigger Draft Alerts if new drafts were created
+  trigger-alerts:
+    needs: scrape
+    if: needs.scrape.outputs.new_events > 0
+    uses: ./.github/workflows/notify-pending-drafts.yml
