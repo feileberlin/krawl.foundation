@@ -1,5 +1,5 @@
 metadata:
-  last_updated: '2025-11-21'
+  last_updated: 2025-11-21
   version: 1.0.0
   maintainer: feileberlin
 todos:
@@ -24,7 +24,6 @@ todos:
     added: 2025-11-21
     optional: true
     url: https://developers.facebook.com/apps
-  medium_priority:
   - task: Ersten Auto-Scrape abwarten
     status: pending
     added: 2025-11-21
@@ -42,6 +41,12 @@ todos:
   - task: JSON Schema für Event-Validierung
     status: pending
     added: 2025-11-21
+    - task: "Better"
+      status: pending
+      added: 2025-11-21
+      command: "tests/test_event_scraper.py"
+      note: "Add some more same-day, next-day, next-week and next-month LoremIpsum events in debug mode"
+
   low_priority:
   - task: Smart Deduplication implementieren
     status: pending
@@ -344,7 +349,6 @@ roadmap:
     priority: medium
     effort: low
     impact: medium
-  medium_priority:
   - name: CSV Export
     description: Events als CSV exportieren
     priority: medium
@@ -385,3 +389,8 @@ stats:
   coverage: 85
   last_release: 1.0.0
   next_milestone: 1.1.0
+    - task: "Better event test data"
+      status: pending
+      added: 2025-11-21
+      command: "tests/test_event_scraper.py"
+      note: "Add some more same-day, next-day, next-week and next-month LoremIpsum events in debug mode"
