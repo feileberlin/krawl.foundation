@@ -1,0 +1,3 @@
+[submodule "docs/archive"]
+	path = docs/archive
+	url = https://github.com/feileberlin/krawl.ist

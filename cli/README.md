@@ -220,6 +220,14 @@ python -m pdb cli/event_scraper.py diff event1.json event2.json
 ./cli/event_scraper.py list --format json > debug-output.json
 ```
 
+## 📚 Project History
+
+This project is a ground-up rewrite. The original vision and philosophy are preserved in:
+→ [`docs/archive/`](docs/archive/) (read-only historical reference)
+
+**Current implementation status:** See [`_data/features.yml`](_data/features.yml )
+
+
 ## 📚 Weitere Ressourcen
 
 - `/tests/` - Unit Tests und Fixtures
