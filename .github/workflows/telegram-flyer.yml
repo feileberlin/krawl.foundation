@@ -3,6 +3,13 @@ name: 📸 Telegram Flyer Processing
 on:
   repository_dispatch:
     types: [telegram_flyer_submission]
+  workflow_dispatch:
+    inputs:
+      test_mode:
+        description: 'Run in test mode (uses sample image)'
+        required: false
+        default: 'true'
+        type: boolean
 
 permissions:
   contents: write
