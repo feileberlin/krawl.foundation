@@ -229,3 +229,102 @@ await update.message.reply_text(
 - **OCR Engine:** `cli/image_extractor.py`
 - **Secrets Setup:** `scripts/setup_secrets.sh`
 - **Telegram Bot API:** https://core.telegram.org/bots/api
+
+---
+
+## 🎤 Voice Message Submissions
+
+### User Flow
+```
+User → 🎤 Sprachnachricht senden
+    ↓
+Bot → "Transkribiere..."
+    ↓
+GitHub Actions → VOSK Spracherkennung
+    ↓
+Draft JSON mit Transkription
+```
+
+### Example Voice Input
+"Hallo, ich möchte ein Event eintragen. Konzert am einunddreißigsten Dezember zweitausendfünfundzwanzig um zwanzig Uhr im SO36 Berlin. Eintritt kostet fünfzehn Euro."
+
+### Transcription Result
+```json
+{
+  "_comment": "# Transcription: konzert am 31.12.2025 um 20 uhr im so36 berlin eintritt 15 euro",
+  "message_type": "voice",
+  "transcription": "konzert am 31.12.2025 um 20 uhr im so36 berlin eintritt 15 euro",
+  "needs_review": true
+}
+```
+
+### VOSK Setup (GitHub Actions)
+```yaml
+- name: Download VOSK model
+  run: |
+    wget https://alphacephei.com/vosk/models/vosk-model-small-de-0.15.zip
+    unzip -d ~/.cache/vosk/model-de
+```
+
+**Models:**
+- German: `vosk-model-small-de-0.15` (45 MB)
+- English: `vosk-model-small-en-us-0.15` (40 MB)
+- Multilingual: `vosk-model-small-multi-0.15` (50 MB)
+
+---
+
+## 💬 Text Message Submissions
+
+### User Flow
+```
+User → 💬 "Konzert am 31.12. im SO36, 20 Uhr"
+    ↓
+Bot → "Draft erstellen..."
+    ↓
+GitHub Actions → Direkt zu Draft (kein OCR/VOSK)
+    ↓
+Draft JSON mit Original-Text
+```
+
+### Example Text Input
+```
+Party @ Berghain
+1. Januar 2026, 23:00
+Techno Night mit DJ XYZ
+Eintritt: 20€
+```
+
+### Draft Result
+```json
+{
+  "_comment": "# Original message: Party @ Berghain, 1. Januar 2026...",
+  "message_type": "text",
+  "original_text": "Party @ Berghain\n1. Januar 2026, 23:00...",
+  "needs_review": true
+}
+```
+
+---
+
+## 🔄 Processing Comparison
+
+| Input Type | Processing | Duration | Accuracy |
+|------------|-----------|----------|----------|
+| 📸 Photo | OCR (Tesseract) | ~30s | 70-90% |
+| 🎤 Voice | VOSK Transcription | ~20s | 80-95% |
+| 💬 Text | Direct | ~5s | 100% |
+
+### Best Practices
+
+**For Users:**
+- 📸 **Photo:** Sharp image, good lighting, text visible
+- 🎤 **Voice:** Clear speech, mention date/time/venue
+- 💬 **Text:** Structured format (date, venue, title, etc.)
+
+**For Moderators:**
+All submissions create drafts with `needs_review: true`
+- Check `_comment` field for original input
+- Verify extracted data (date, venue, title)
+- Correct any OCR/transcription errors
+- Set `status: published` when ready
+
