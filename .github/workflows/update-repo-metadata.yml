@@ -1,0 +1,310 @@
+11name: 📝 Update Repository Metadata (MANUAL)
+
+on:
+  workflow_dispatch:
+    inputs:
+      description:
+        description: 'Repository description (About)'
+        required: false
+        type: string
+      homepage:
+        description: 'Homepage URL'
+        required: false
+        type: string
+      topics:
+        description: 'Topics (comma-separated, max 20)'
+        required: false
+        type: string
+      has_issues:
+        description: 'Enable Issues'
+        required: false
+        type: boolean
+        default: true
+      has_wiki:
+        description: 'Enable Wiki'
+        required: false
+        type: boolean
+        default: false
+      has_projects:
+        description: 'Enable Projects'
+        required: false
+        type: boolean
+        default: false
+      has_discussions:
+        description: 'Enable Discussions'
+        required: false
+        type: boolean
+        default: true
+      dry_run:
+        description: 'Dry run (preview only, no changes)'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  metadata: write
+
+jobs:
+  update-metadata:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 🔐 Check permissions
+        run: |
+          echo "🔍 Checking if workflow was triggered by repository admin..."
+          if [[ "${{ github.actor }}" != "${{ github.repository_owner }}" ]]; then
+            echo "⚠️ Warning: Only repository owner can update metadata"
+            echo "Actor: ${{ github.actor }}"
+            echo "Owner: ${{ github.repository_owner }}"
+            # Continue anyway (GITHUB_TOKEN will fail if insufficient permissions)
+          fi
+      
+      - name: 📥 Validate inputs
+        id: validate
+        run: |
+          set -e
+          
+          # Validate description length
+          if [[ -n "${{ inputs.description }}" ]]; then
+            DESC_LEN=${#description}
+            if [[ $DESC_LEN -gt 350 ]]; then
+              echo "❌ Error: Description too long ($DESC_LEN chars, max 350)"
+              exit 1
+            fi
+            echo "✅ Description: $DESC_LEN chars"
+          fi
+          
+          # Validate homepage URL
+          if [[ -n "${{ inputs.homepage }}" ]]; then
+            if [[ ! "${{ inputs.homepage }}" =~ ^https?:// ]]; then
+              echo "❌ Error: Homepage must start with http:// or https://"
+              exit 1
+            fi
+            echo "✅ Homepage: ${{ inputs.homepage }}"
+          fi
+          
+          # Validate and parse topics
+          if [[ -n "${{ inputs.topics }}" ]]; then
+            IFS=',' read -ra TOPICS <<< "${{ inputs.topics }}"
+            TOPIC_COUNT=${#TOPICS[@]}
+            
+            if [[ $TOPIC_COUNT -gt 20 ]]; then
+              echo "❌ Error: Too many topics ($TOPIC_COUNT, max 20)"
+              exit 1
+            fi
+            
+            # Validate each topic (lowercase, hyphens only, max 50 chars)
+            for topic in "${TOPICS[@]}"; do
+              topic=$(echo "$topic" | xargs) # trim whitespace
+              if [[ ! "$topic" =~ ^[a-z0-9-]+$ ]]; then
+                echo "❌ Error: Invalid topic '$topic' (only lowercase letters, numbers, hyphens)"
+                exit 1
+              fi
+              if [[ ${#topic} -gt 50 ]]; then
+                echo "❌ Error: Topic '$topic' too long (max 50 chars)"
+                exit 1
+              fi
+            done
+            
+            echo "✅ Topics: $TOPIC_COUNT valid topics"
+            
+            # Convert to JSON array
+            TOPICS_JSON="["
+            for i in "${!TOPICS[@]}"; do
+              topic=$(echo "${TOPICS[$i]}" | xargs | tr '[:upper:]' '[:lower:]')
+              TOPICS_JSON+="\"$topic\""
+              if [[ $i -lt $((${#TOPICS[@]} - 1)) ]]; then
+                TOPICS_JSON+=","
+              fi
+            done
+            TOPICS_JSON+="]"
+            
+            echo "topics_json=$TOPICS_JSON" >> $GITHUB_OUTPUT
+          else
+            echo "topics_json=[]" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: 🔍 Fetch current metadata
+        id: current
+        run: |
+          echo "📡 Fetching current repository metadata..."
+          
+          CURRENT=$(gh api \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            /repos/${{ github.repository }})
+          
+          echo "Current metadata:"
+          echo "$CURRENT" | jq '{
+            description: .description,
+            homepage: .homepage,
+            topics: .topics,
+            has_issues: .has_issues,
+            has_wiki: .has_wiki,
+            has_projects: .has_projects,
+            has_discussions: .has_discussions
+          }'
+          
+          # Save for rollback
+          echo "$CURRENT" > /tmp/metadata_backup.json
+        env:
+          GH_TOKEN: ${{ github.token }}
+      
+      - name: 🏗️ Build update payload
+        id: payload
+        run: |
+          set -e
+          
+          # Start with empty object
+          PAYLOAD="{}"
+          
+          # Add description if provided
+          if [[ -n "${{ inputs.description }}" ]]; then
+            PAYLOAD=$(echo "$PAYLOAD" | jq --arg desc "${{ inputs.description }}" '. + {description: $desc}')
+          fi
+          
+          # Add homepage if provided
+          if [[ -n "${{ inputs.homepage }}" ]]; then
+            PAYLOAD=$(echo "$PAYLOAD" | jq --arg url "${{ inputs.homepage }}" '. + {homepage: $url}')
+          fi
+          
+          # Add topics if provided
+          if [[ "${{ steps.validate.outputs.topics_json }}" != "[]" ]]; then
+            PAYLOAD=$(echo "$PAYLOAD" | jq --argjson topics '${{ steps.validate.outputs.topics_json }}' '. + {topics: $topics}')
+          fi
+          
+          # Add feature flags
+          PAYLOAD=$(echo "$PAYLOAD" | jq '. + {
+            has_issues: ${{ inputs.has_issues }},
+            has_wiki: ${{ inputs.has_wiki }},
+            has_projects: ${{ inputs.has_projects }},
+            has_discussions: ${{ inputs.has_discussions }}
+          }')
+          
+          echo "📦 Update payload:"
+          echo "$PAYLOAD" | jq .
+          
+          # Save for next step
+          echo "$PAYLOAD" > /tmp/payload.json
+          echo "payload<<EOF" >> $GITHUB_OUTPUT
+          echo "$PAYLOAD" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+      
+      - name: 🔄 Update repository metadata
+        if: inputs.dry_run == false
+        id: update
+        run: |
+          set -e
+          
+          echo "🚀 Applying metadata updates..."
+          
+          RESPONSE=$(gh api \
+            --method PATCH \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            /repos/${{ github.repository }} \
+            --input /tmp/payload.json)
+          
+          echo "✅ Update successful!"
+          echo "$RESPONSE" | jq '{
+            description: .description,
+            homepage: .homepage,
+            topics: .topics,
+            has_issues: .has_issues,
+            has_wiki: .has_wiki,
+            has_projects: .has_projects,
+            has_discussions: .has_discussions
+          }'
+          
+          echo "update_success=true" >> $GITHUB_OUTPUT
+        env:
+          GH_TOKEN: ${{ github.token }}
+      
+      - name: 👁️ Dry run preview
+        if: inputs.dry_run == true
+        run: |
+          echo "🔍 DRY RUN MODE - No changes will be applied"
+          echo ""
+          echo "📋 Planned changes:"
+          cat /tmp/payload.json | jq .
+          echo ""
+          echo "💡 To apply these changes, run workflow again with dry_run=false"
+      
+      - name: 🔴 Rollback on failure
+        if: failure() && steps.update.outputs.update_success != 'true' && inputs.dry_run == false
+        run: |
+          echo "❌ Update failed, attempting rollback..."
+          
+          if [[ -f /tmp/metadata_backup.json ]]; then
+            echo "📦 Restoring previous metadata..."
+            
+            ROLLBACK_PAYLOAD=$(cat /tmp/metadata_backup.json | jq '{
+              description: .description,
+              homepage: .homepage,
+              topics: .topics,
+              has_issues: .has_issues,
+              has_wiki: .has_wiki,
+              has_projects: .has_projects,
+              has_discussions: .has_discussions
+            }')
+            
+            gh api \
+              --method PATCH \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              /repos/${{ github.repository }} \
+              --input - <<< "$ROLLBACK_PAYLOAD"
+            
+            echo "✅ Rollback successful"
+          else
+            echo "⚠️ No backup found, cannot rollback"
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
+      
+      - name: 📊 Summary
+        if: always()
+        run: |
+          echo "## 📝 Metadata Update Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [[ "${{ inputs.dry_run }}" == "true" ]]; then
+            echo "**Mode:** 🔍 Dry Run (Preview)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "**Mode:** 🚀 Live Update" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Changes Requested" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [[ -n "${{ inputs.description }}" ]]; then
+            echo "- **Description:** ${{ inputs.description }}" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [[ -n "${{ inputs.homepage }}" ]]; then
+            echo "- **Homepage:** ${{ inputs.homepage }}" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [[ -n "${{ inputs.topics }}" ]]; then
+            echo "- **Topics:** ${{ inputs.topics }}" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "- **Issues:** ${{ inputs.has_issues }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Wiki:** ${{ inputs.has_wiki }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Projects:** ${{ inputs.has_projects }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Discussions:** ${{ inputs.has_discussions }}" >> $GITHUB_STEP_SUMMARY
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [[ "${{ steps.update.outputs.update_success }}" == "true" ]]; then
+            echo "### ✅ Status: Success" >> $GITHUB_STEP_SUMMARY
+            echo "Metadata has been updated successfully." >> $GITHUB_STEP_SUMMARY
+          elif [[ "${{ inputs.dry_run }}" == "true" ]]; then
+            echo "### 👁️ Status: Preview Only" >> $GITHUB_STEP_SUMMARY
+            echo "No changes were applied. Set dry_run=false to apply." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### ❌ Status: Failed" >> $GITHUB_STEP_SUMMARY
+            echo "Update failed. Check logs above for details." >> $GITHUB_STEP_SUMMARY
+          fi
