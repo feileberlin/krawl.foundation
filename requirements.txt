@@ -65,18 +65,21 @@ pytesseract>=0.3.10
 instaloader>=4.10.0
 
 # ----------------------------------------------------------------------------
-# IMAGE PROCESSING & OCR
+# TELEGRAM BOT
 # ----------------------------------------------------------------------------
 
-# Image Processing
-pillow>=10.0.0
+# Telegram Bot API
+python-telegram-bot>=20.0
 
-# OCR (requires system package: apt-get install tesseract-ocr tesseract-ocr-deu)
-pytesseract>=0.3.10
+# Environment Variables
+python-dotenv>=1.0.0
 
 # ----------------------------------------------------------------------------
-# SOCIAL MEDIA SCRAPING
+# VOICE TRANSCRIPTION
 # ----------------------------------------------------------------------------
 
-# Instagram Scraping
-instaloader>=4.10.0
+# VOSK Speech Recognition (requires VOSK models download)
+vosk>=0.3.45
+
+# Audio Processing (requires system package: apt-get install ffmpeg)
+pydub>=0.25.1
