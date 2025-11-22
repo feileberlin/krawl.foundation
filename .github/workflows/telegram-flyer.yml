@@ -57,40 +57,60 @@ jobs:
             echo "user_id=12345" >> $GITHUB_OUTPUT
             echo "username=test_user" >> $GITHUB_OUTPUT
             echo "text=Konzert am 31.12.2025 um 20 Uhr im SO36 Berlin. Eintritt 15 EUR." >> $GITHUB_OUTPUT
+            echo "file_id=" >> $GITHUB_OUTPUT
+            if [[ "${{ inputs.message_type }}" == "voice" ]]; then
+              echo "filename=workflow-test-voice.ogg" >> $GITHUB_OUTPUT
+            elif [[ "${{ inputs.message_type }}" == "photo" ]]; then
+              echo "filename=workflow-test-photo.png" >> $GITHUB_OUTPUT
+            else
+              echo "filename=workflow-test.txt" >> $GITHUB_OUTPUT
+            fi
+            echo "test_mode=true" >> $GITHUB_OUTPUT
           else
             echo "message_type=${{ github.event.client_payload.message_type }}" >> $GITHUB_OUTPUT
             echo "user_id=${{ github.event.client_payload.telegram_user_id }}" >> $GITHUB_OUTPUT
             echo "username=${{ github.event.client_payload.telegram_username }}" >> $GITHUB_OUTPUT
             echo "text=${{ github.event.client_payload.text }}" >> $GITHUB_OUTPUT
+            echo "file_id=${{ github.event.client_payload.file_id }}" >> $GITHUB_OUTPUT
+            echo "filename=${{ github.event.client_payload.filename }}" >> $GITHUB_OUTPUT
+            echo "test_mode=false" >> $GITHUB_OUTPUT
           fi
       
       - name: Process TEXT message
         if: steps.payload.outputs.message_type == 'text'
         id: text
+        env:
+          TEXT_PAYLOAD: ${{ steps.payload.outputs.text }}
+          USER_ID: ${{ steps.payload.outputs.user_id }}
+          USERNAME: ${{ steps.payload.outputs.username }}
         run: |
           mkdir -p .cache/telegram
-          
-          TEXT="${{ steps.payload.outputs.text }}"
-          
+
           echo "💬 Processing text message..."
-          echo "$TEXT" > .cache/telegram/message.txt
-          
-          # Create draft with text as first line comment
-          cat > _events/telegram-draft-$(date +%Y%m%d_%H%M%S).json << JSONEOF
-          {
-            "_comment": "# Original message: $TEXT",
-            "status": "draft",
-            "source": "telegram",
-            "message_type": "text",
-            "telegram_user_id": "${{ steps.payload.outputs.user_id }}",
-            "telegram_username": "${{ steps.payload.outputs.username }}",
-            "original_text": "$TEXT",
-            "created_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
-            "title": "Event Draft (from text)",
-            "needs_review": true
-          }
-          JSONEOF
-          
+          printf '%s' "$TEXT_PAYLOAD" > .cache/telegram/message.txt
+
+          TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+          DRAFT_PATH="_events/telegram-draft-${TIMESTAMP}.json"
+
+          jq -n \
+            --arg text "$TEXT_PAYLOAD" \
+            --arg user_id "$USER_ID" \
+            --arg username "$USERNAME" \
+            --arg created_at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            '{
+              "_comment": "# Original message: " + $text,
+              "status": "draft",
+              "source": "telegram",
+              "message_type": "text",
+              "telegram_user_id": $user_id,
+              "telegram_username": $username,
+              "original_text": $text,
+              "created_at": $created_at,
+              "title": "Event Draft (from text)",
+              "needs_review": true
+            }' > "$DRAFT_PATH"
+
+          echo "📝 Draft created: $DRAFT_PATH"
           echo "extracted=true" >> $GITHUB_OUTPUT
       
       - name: Download and process VOICE message
@@ -98,50 +118,90 @@ jobs:
         id: voice
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          FILE_ID: ${{ steps.payload.outputs.file_id }}
+          FILENAME: ${{ steps.payload.outputs.filename }}
+          TEST_MODE: ${{ steps.payload.outputs.test_mode }}
+          USER_ID: ${{ steps.payload.outputs.user_id }}
+          USERNAME: ${{ steps.payload.outputs.username }}
         run: |
           mkdir -p .cache/telegram
           
-          FILE_ID="${{ github.event.client_payload.file_id }}"
-          FILENAME="${{ github.event.client_payload.filename }}"
-          
-          echo "🎤 Downloading voice message..."
-          
-          FILE_PATH=$(curl -s "https://api.telegram.org/bot${TELEGRAM_TOKEN}/getFile?file_id=${FILE_ID}" \
-            | python3 -c "import sys, json; print(json.load(sys.stdin)['result']['file_path'])")
-          
-          curl -s "https://api.telegram.org/file/bot${TELEGRAM_TOKEN}/${FILE_PATH}" \
-            -o ".cache/telegram/${FILENAME}"
-          
-          echo "✅ Downloaded: .cache/telegram/${FILENAME}"
-          
-          echo "🔊 Transcribing with VOSK..."
-          python3 cli/voice_transcriber.py \
-            ".cache/telegram/${FILENAME}" \
-            --language de \
-            --model ~/.cache/vosk/model-de \
-            --output .cache/telegram/transcription.txt
-          
-          TRANSCRIPTION=$(cat .cache/telegram/transcription.txt)
-          
+          TARGET_NAME="${FILENAME:-workflow-test-voice.ogg}"
+          TRANSCRIPTION=""
+
+          if [[ "$TEST_MODE" == "true" ]]; then
+            echo "ℹ️ Test mode – skipping Telegram download."
+            printf 'Test voice placeholder' > ".cache/telegram/${TARGET_NAME}"
+            TRANSCRIPTION="(Testlauf ohne Audioeingang)"
+          else
+            if [[ -z "$FILE_ID" ]]; then
+              echo "❌ Missing Telegram file_id" >&2
+              exit 1
+            fi
+            if [[ -z "$FILENAME" ]]; then
+              echo "❌ Missing Telegram filename" >&2
+              exit 1
+            fi
+
+            echo "🎤 Downloading voice message..."
+            FILE_PATH=$(curl -s "https://api.telegram.org/bot${TELEGRAM_TOKEN}/getFile?file_id=${FILE_ID}" \
+              | python3 -c "import sys, json; print(json.load(sys.stdin)['result']['file_path'])")
+
+            if [[ -z "$FILE_PATH" ]]; then
+              echo "❌ Unable to resolve Telegram file path" >&2
+              exit 1
+            fi
+
+            curl -s "https://api.telegram.org/file/bot${TELEGRAM_TOKEN}/${FILE_PATH}" \
+              -o ".cache/telegram/${TARGET_NAME}"
+
+            echo "✅ Downloaded: .cache/telegram/${TARGET_NAME}"
+
+            echo "🔊 Transcribing with VOSK..."
+            python3 cli/voice_transcriber.py \
+              ".cache/telegram/${TARGET_NAME}" \
+              --language de \
+              --model ~/.cache/vosk/model-de \
+              --output .cache/telegram/transcription.txt
+
+            if [[ -s .cache/telegram/transcription.txt ]]; then
+              TRANSCRIPTION=$(cat .cache/telegram/transcription.txt)
+            else
+              TRANSCRIPTION=""
+            fi
+          fi
+
+          if [[ -z "$TRANSCRIPTION" ]]; then
+            TRANSCRIPTION="(Keine Transkription verfügbar)"
+            printf '%s' "$TRANSCRIPTION" > .cache/telegram/transcription.txt
+          fi
+
           echo "📝 Transcription: $TRANSCRIPTION"
-          
-          # Create draft with transcription as comment
-          cat > _events/telegram-draft-$(date +%Y%m%d_%H%M%S).json << JSONEOF
-          {
-            "_comment": "# Transcription: $TRANSCRIPTION",
-            "status": "draft",
-            "source": "telegram",
-            "message_type": "voice",
-            "telegram_user_id": "${{ steps.payload.outputs.user_id }}",
-            "telegram_username": "${{ steps.payload.outputs.username }}",
-            "voice_file": "${FILENAME}",
-            "transcription": "$TRANSCRIPTION",
-            "created_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
-            "title": "Event Draft (from voice)",
-            "needs_review": true
-          }
-          JSONEOF
-          
+
+          TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+          DRAFT_PATH="_events/telegram-draft-${TIMESTAMP}.json"
+
+          jq -n \
+            --arg transcription "$TRANSCRIPTION" \
+            --arg user_id "$USER_ID" \
+            --arg username "$USERNAME" \
+            --arg voice_file "$TARGET_NAME" \
+            --arg created_at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            '{
+              "_comment": "# Transcription: " + $transcription,
+              "status": "draft",
+              "source": "telegram",
+              "message_type": "voice",
+              "telegram_user_id": $user_id,
+              "telegram_username": $username,
+              "voice_file": $voice_file,
+              "transcription": $transcription,
+              "created_at": $created_at,
+              "title": "Event Draft (from voice)",
+              "needs_review": true
+            }' > "$DRAFT_PATH"
+
+          echo "📝 Draft created: $DRAFT_PATH"
           echo "extracted=true" >> $GITHUB_OUTPUT
       
       - name: Download and process PHOTO
@@ -149,49 +209,88 @@ jobs:
         id: photo
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          FILE_ID: ${{ steps.payload.outputs.file_id }}
+          FILENAME: ${{ steps.payload.outputs.filename }}
+          TEST_MODE: ${{ steps.payload.outputs.test_mode }}
+          USER_ID: ${{ steps.payload.outputs.user_id }}
+          USERNAME: ${{ steps.payload.outputs.username }}
         run: |
           mkdir -p .cache/telegram
           
-          FILE_ID="${{ github.event.client_payload.file_id }}"
-          FILENAME="${{ github.event.client_payload.filename }}"
-          
-          echo "📸 Downloading photo..."
-          
-          FILE_PATH=$(curl -s "https://api.telegram.org/bot${TELEGRAM_TOKEN}/getFile?file_id=${FILE_ID}" \
-            | python3 -c "import sys, json; print(json.load(sys.stdin)['result']['file_path'])")
-          
-          curl -s "https://api.telegram.org/file/bot${TELEGRAM_TOKEN}/${FILE_PATH}" \
-            -o ".cache/telegram/${FILENAME}"
-          
-          echo "✅ Downloaded: .cache/telegram/${FILENAME}"
-          
-          echo "🔍 Running OCR..."
-          tesseract ".cache/telegram/${FILENAME}" .cache/telegram/ocr -l deu+eng
-          
-          OCR_TEXT=$(cat .cache/telegram/ocr.txt)
-          
+          TARGET_NAME="${FILENAME:-workflow-test-photo.jpg}"
+          OCR_TEXT=""
+
+          if [[ "$TEST_MODE" == "true" ]]; then
+            echo "ℹ️ Test mode – skipping Telegram download and OCR."
+            printf 'Test photo placeholder' > ".cache/telegram/${TARGET_NAME}"
+            OCR_TEXT="(Testlauf ohne Bild)"
+          else
+            if [[ -z "$FILE_ID" ]]; then
+              echo "❌ Missing Telegram file_id" >&2
+              exit 1
+            fi
+            if [[ -z "$FILENAME" ]]; then
+              echo "❌ Missing Telegram filename" >&2
+              exit 1
+            fi
+
+            echo "📸 Downloading photo..."
+            FILE_PATH=$(curl -s "https://api.telegram.org/bot${TELEGRAM_TOKEN}/getFile?file_id=${FILE_ID}" \
+              | python3 -c "import sys, json; print(json.load(sys.stdin)['result']['file_path'])")
+
+            if [[ -z "$FILE_PATH" ]]; then
+              echo "❌ Unable to resolve Telegram file path" >&2
+              exit 1
+            fi
+
+            curl -s "https://api.telegram.org/file/bot${TELEGRAM_TOKEN}/${FILE_PATH}" \
+              -o ".cache/telegram/${TARGET_NAME}"
+
+            echo "✅ Downloaded: .cache/telegram/${TARGET_NAME}"
+
+            echo "🔍 Running OCR..."
+            tesseract ".cache/telegram/${TARGET_NAME}" .cache/telegram/ocr -l deu+eng
+
+            if [[ -s .cache/telegram/ocr.txt ]]; then
+              OCR_TEXT=$(cat .cache/telegram/ocr.txt)
+            fi
+          fi
+
+          if [[ -z "$OCR_TEXT" ]]; then
+            OCR_TEXT="(Kein OCR-Ergebnis verfügbar)"
+            printf '%s' "$OCR_TEXT" > .cache/telegram/ocr.txt
+          fi
+
           echo "📝 OCR Text: $OCR_TEXT"
-          
-          # Create draft with OCR as comment
-          cat > _events/telegram-draft-$(date +%Y%m%d_%H%M%S).json << JSONEOF
-          {
-            "_comment": "# OCR Text: $OCR_TEXT",
-            "status": "draft",
-            "source": "telegram",
-            "message_type": "photo",
-            "telegram_user_id": "${{ steps.payload.outputs.user_id }}",
-            "telegram_username": "${{ steps.payload.outputs.username }}",
-            "image_file": "${FILENAME}",
-            "ocr_text": "$OCR_TEXT",
-            "created_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
-            "title": "Event Draft (from photo)",
-            "needs_review": true
-          }
-          JSONEOF
-          
+
+          TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+          DRAFT_PATH="_events/telegram-draft-${TIMESTAMP}.json"
+
+          jq -n \
+            --arg ocr "$OCR_TEXT" \
+            --arg user_id "$USER_ID" \
+            --arg username "$USERNAME" \
+            --arg image_file "$TARGET_NAME" \
+            --arg created_at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            '{
+              "_comment": "# OCR Text: " + $ocr,
+              "status": "draft",
+              "source": "telegram",
+              "message_type": "photo",
+              "telegram_user_id": $user_id,
+              "telegram_username": $username,
+              "image_file": $image_file,
+              "ocr_text": $ocr,
+              "created_at": $created_at,
+              "title": "Event Draft (from photo)",
+              "needs_review": true
+            }' > "$DRAFT_PATH"
+
+          echo "📝 Draft created: $DRAFT_PATH"
           echo "extracted=true" >> $GITHUB_OUTPUT
       
       - name: Commit draft
+        if: steps.payload.outputs.test_mode == 'false'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -207,6 +306,7 @@ jobs:
           git push
       
       - name: Create review issue
+        if: steps.payload.outputs.test_mode == 'false'
         uses: actions/github-script@v7
         with:
           script: |
@@ -247,7 +347,16 @@ jobs:
             });
       
       - name: Trigger draft notification
+        if: steps.payload.outputs.test_mode == 'false' && secrets.WORKFLOW_DISPATCH_TOKEN != ''
         run: |
           gh workflow run notify-pending-drafts.yml --ref main
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.WORKFLOW_DISPATCH_TOKEN }}
+
+      - name: Skip draft notification (missing token)
+        if: steps.payload.outputs.test_mode == 'false' && secrets.WORKFLOW_DISPATCH_TOKEN == ''
+        run: echo "ℹ️ WORKFLOW_DISPATCH_TOKEN not set – skipping draft reminder trigger."
+
+      - name: Skip git actions in test mode
+        if: steps.payload.outputs.test_mode == 'true'
+        run: echo "ℹ️ Test mode – skipping commit, issue creation, and notifications."
