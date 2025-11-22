@@ -55,6 +55,7 @@ yarn.lock               # Nur committen wenn yarn benutzt wird
 .env                    # Lokale Environment-Variablen
 .env.local
 .env.*.local
+.env.backup             # Backup der .env Datei
 
 # WICHTIG: Niemals Secrets committen!
 # API Keys, Tokens, Passwörter gehören in .env
@@ -143,6 +144,8 @@ _events/*-test-*.md
 # Scraping-Temp-Files
 scripts/scraper/.cache/
 scripts/scraper/temp/
+.cache/                 # General cache directory
+.cache/telegram/        # Telegram bot uploaded images
 
 # ----------------------------------------------------------------------------
 # DEPLOYMENT

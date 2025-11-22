@@ -1,17 +1,21 @@
+#!/usr/bin/env python3
 """
-Image Stream Extractor - Lade Bilder von Social Media und extrahiere Event-Infos
+Image Stream Extractor - Batch OCR für Event-Flyer
 
-Workflow:
-1. Lade letzte N Bilder von Instagram/Facebook
-2. Extrahiere Alt-Text / mache OCR
-3. Zeige Bild + Text im Terminal
-4. Öffne interaktiven Editor für Event-JSON
-5. Speichere oder verwerfe
+Workflow (Option A - Batch Processing):
+1. Lade Bilder von Instagram/Facebook oder lokalen Dateien
+2. Führe OCR auf allen Bildern aus (Batch-Modus)
+3. Extrahiere Daten und erstelle Event-Drafts automatisch
+4. Keine User-Interaktion während Verarbeitung
+
+Use Cases:
+- Telegram Bot: Batch-Verarbeitung hochgeladener Flyer
+- GitHub Actions: Automatische OCR-Pipeline
+- CLI: Manueller Batch-Scan von Flyern
 
 Dependencies:
-- pillow (Bilder anzeigen)
-- pytesseract (OCR, optional)
-- imgcat oder chafa (Terminal-Bild-Display)
+- pillow (Bildverarbeitung)
+- pytesseract (OCR)
 """
 
 import json
@@ -25,36 +29,23 @@ import requests
 
 
 class ImageStreamExtractor:
-    """Extract event info from social media images with OCR/Alt-Text."""
+    """Extract event info from social media images with OCR - Batch mode."""
 
     def __init__(self, cache_dir: Path = None):
         self.cache_dir = cache_dir or Path(".cache/images")
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
-        # Check available tools
+        # Check OCR availability
         self.has_ocr = self._check_ocr()
-        self.image_viewer = self._detect_image_viewer()
 
     def _check_ocr(self) -> bool:
         """Check if OCR is available."""
         try:
             import pytesseract
-
             pytesseract.get_tesseract_version()
             return True
         except:
             return False
-
-    def _detect_image_viewer(self) -> Optional[str]:
-        """Detect available terminal image viewer."""
-        viewers = ["imgcat", "chafa", "catimg"]
-        for viewer in viewers:
-            try:
-                subprocess.run([viewer, "--version"], capture_output=True, check=False)
-                return viewer
-            except FileNotFoundError:
-                continue
-        return None
 
     def fetch_instagram_images(
         self, profile: str, count: int = 5
@@ -183,6 +174,96 @@ class ImageStreamExtractor:
 
         return images
 
+    def load_local_images(
+        self, path: str, recursive: bool = False
+    ) -> List[Dict[str, Any]]:
+        """
+        Load images from local directory or file.
+
+        Args:
+            path: File path or directory path
+            recursive: Search subdirectories recursively
+
+        Returns:
+            List of image data dicts
+        """
+        images = []
+        local_path = Path(path).expanduser().resolve()
+
+        # Supported image formats
+        image_extensions = {'.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.tiff'}
+
+        if not local_path.exists():
+            print(f"❌ Pfad existiert nicht: {local_path}")
+            return images
+
+        # Single file
+        if local_path.is_file():
+            if local_path.suffix.lower() in image_extensions:
+                images.append(self._create_local_image_data(local_path))
+            else:
+                print(f"⚠️  Keine unterstützte Bilddatei: {local_path.suffix}")
+            return images
+
+        # Directory
+        if local_path.is_dir():
+            print(f"📂 Scanne Verzeichnis: {local_path}")
+            
+            if recursive:
+                # Recursive search
+                for ext in image_extensions:
+                    images.extend([
+                        self._create_local_image_data(p)
+                        for p in local_path.rglob(f"*{ext}")
+                    ])
+                    images.extend([
+                        self._create_local_image_data(p)
+                        for p in local_path.rglob(f"*{ext.upper()}")
+                    ])
+            else:
+                # Non-recursive
+                for ext in image_extensions:
+                    images.extend([
+                        self._create_local_image_data(p)
+                        for p in local_path.glob(f"*{ext}")
+                    ])
+                    images.extend([
+                        self._create_local_image_data(p)
+                        for p in local_path.glob(f"*{ext.upper()}")
+                    ])
+
+            # Sort by modification time (newest first)
+            images.sort(key=lambda x: x['mtime'], reverse=True)
+
+            print(f"✓ {len(images)} Bilder gefunden")
+
+        return images
+
+    def _create_local_image_data(self, image_path: Path) -> Dict[str, Any]:
+        """
+        Create image data dict for local file.
+
+        Args:
+            image_path: Path to local image
+
+        Returns:
+            Image data dict
+        """
+        stat = image_path.stat()
+        
+        return {
+            "source": "local",
+            "profile": str(image_path.parent),
+            "image_path": image_path,
+            "url": f"file://{image_path.absolute()}",
+            "caption": "",
+            "alt_text": "",
+            "date": datetime.fromtimestamp(stat.st_mtime),
+            "mtime": stat.st_mtime,
+            "filename": image_path.name,
+            "size": stat.st_size,
+        }
+
     def extract_text_from_image(self, image_path: Path) -> str:
         """
         Extract text from image using OCR.
@@ -207,130 +288,182 @@ class ImageStreamExtractor:
         except Exception as e:
             return f"[OCR Fehler: {e}]"
 
-    def display_image_in_terminal(self, image_path: Path) -> bool:
+    def batch_ocr(
+        self, 
+        images: List[Dict[str, Any]], 
+        output_json: Optional[Path] = None
+    ) -> List[Dict[str, Any]]:
         """
-        Display image in terminal if viewer available.
-
+        Batch OCR processing for multiple images - non-interactive.
+        
         Args:
-            image_path: Path to image
-
+            images: List of image data dicts
+            output_json: Optional path to save results as JSON
+            
         Returns:
-            True if displayed, False otherwise
+            List of event drafts with OCR data
         """
-        if not self.image_viewer:
-            return False
+        if not self.has_ocr:
+            print("❌ OCR nicht verfügbar!")
+            return []
+        
+        events = []
+        total = len(images)
+        
+        print(f"\n🔍 Batch OCR: {total} Bilder werden verarbeitet...\n")
+        
+        for i, image_data in enumerate(images, 1):
+            image_path = image_data["image_path"]
+            print(f"[{i}/{total}] {image_path.name}... ", end="", flush=True)
+            
+            try:
+                # Extract OCR text
+                ocr_text = self.extract_text_from_image(image_path)
+                
+                # Create event draft with OCR data
+                event = self._create_event_draft(image_data, ocr_text)
+                events.append(event)
+                
+                print(f"✓ ({len(ocr_text)} chars)")
+                
+            except Exception as e:
+                print(f"✗ Fehler: {e}")
+                # Create minimal draft even on error
+                event = self._create_event_draft(image_data, "")
+                event['ocr_error'] = str(e)
+                events.append(event)
+        
+        print(f"\n✅ {len(events)} Drafts erstellt")
+        
+        # Save to JSON if requested
+        if output_json:
+            output_json = Path(output_json)
+            with open(output_json, 'w', encoding='utf-8') as f:
+                json.dump(events, f, indent=2, ensure_ascii=False, default=str)
+            print(f"💾 Gespeichert: {output_json}")
+        
+        return events
 
-        try:
-            if self.image_viewer == "imgcat":
-                subprocess.run(["imgcat", str(image_path)])
-            elif self.image_viewer == "chafa":
-                subprocess.run(["chafa", "--size=80x40", str(image_path)])
-            elif self.image_viewer == "catimg":
-                subprocess.run(["catimg", str(image_path)])
-            return True
-        except Exception as e:
-            print(f"Fehler beim Anzeigen: {e}")
-            return False
-
-    def interactive_event_editor(
-        self, image_data: Dict[str, Any], ocr_text: str = ""
-    ) -> Optional[Dict[str, Any]]:
+    def _create_event_draft(
+        self, 
+        image_data: Dict[str, Any], 
+        ocr_text: str
+    ) -> Dict[str, Any]:
         """
-        Interactive editor for creating event from image data.
-
+        Create event draft from image data and OCR text.
+        
         Args:
             image_data: Image metadata
             ocr_text: Extracted OCR text
-
+            
         Returns:
-            Event dict or None if skipped
+            Event draft dict
         """
-        print("\n" + "=" * 80)
-        print("📝 INTERAKTIVER EVENT-EDITOR")
-        print("=" * 80)
-
-        # Show image
-        print("\n📷 BILD:")
-        if not self.display_image_in_terminal(image_data["image_path"]):
-            print(f"   Öffne manuell: {image_data['image_path']}")
-            print(f"   URL: {image_data['url']}")
-
-        # Show texts
-        print("\n📄 EXTRAHIERTE TEXTE:")
-        print("-" * 80)
-
-        if image_data.get("caption"):
-            print(f"Caption:\n{image_data['caption']}\n")
-
-        if image_data.get("alt_text"):
-            print(f"Alt-Text:\n{image_data['alt_text']}\n")
-
-        if ocr_text:
-            print(f"OCR:\n{ocr_text}\n")
-
-        print("-" * 80)
-
-        # Interactive prompts
-        print("\n✏️  EVENT-DATEN EINGEBEN (Enter = skip):")
-
-        # Generate template
-        template = {
-            "title": "",
-            "date": "",
-            "venue": image_data.get("profile", "Unknown Venue"),
-            "location": "Berlin",
-            "description": image_data.get("caption", "")[:200],
-            "url": image_data["url"],
-            "image_url": image_data["url"],
-            "source": image_data["source"],
-            "source_id": image_data.get("shortcode") or image_data.get("photo_id"),
-            "scraped_at": datetime.now().isoformat(),
+        # Basic template
+        draft = {
             "status": "draft",
+            "source": image_data["source"],
+            "created_at": datetime.now().isoformat(),
+            "image_file": str(image_data["image_path"]),
+            "ocr_text": ocr_text,
+            "needs_review": True,
         }
+        
+        # Add source-specific fields
+        if image_data["source"] == "instagram":
+            draft.update({
+                "instagram_profile": image_data.get("profile"),
+                "instagram_url": image_data.get("url"),
+                "caption": image_data.get("caption", ""),
+            })
+        elif image_data["source"] == "facebook":
+            draft.update({
+                "facebook_page": image_data.get("page_id"),
+                "facebook_url": image_data.get("url"),
+                "caption": image_data.get("caption", ""),
+            })
+        elif image_data["source"] == "telegram":
+            draft.update({
+                "telegram_user_id": image_data.get("telegram_user_id"),
+                "telegram_username": image_data.get("telegram_username"),
+            })
+        elif image_data["source"] == "local":
+            draft.update({
+                "filename": image_data.get("filename"),
+                "filepath": str(image_data["image_path"]),
+            })
+        
+        # Try to extract basic event data from OCR text
+        draft.update(self._parse_event_data(ocr_text, image_data))
+        
+        return draft
 
-        # Prompt for each field
-        try:
-            title = input("Titel: ").strip()
-            if not title:
-                print("⏭️  Übersprungen (kein Titel)")
-                return None
-            template["title"] = title
-
-            date = input("Datum (YYYY-MM-DD): ").strip()
-            if date:
-                template["date"] = date
-
-            venue = input(f"Venue [{template['venue']}]: ").strip()
-            if venue:
-                template["venue"] = venue
-
-            location = input(f"Ort [{template['location']}]: ").strip()
-            if location:
-                template["location"] = location
-
-            price = input("Preis (z.B. 15€): ").strip()
-            if price:
-                template["price"] = price
-
-            genre = input("Genre: ").strip()
-            if genre:
-                template["genre"] = genre
-
-            # Show preview
-            print("\n📋 VORSCHAU:")
-            print(json.dumps(template, indent=2, ensure_ascii=False))
-
-            # Confirm
-            confirm = input("\n💾 Speichern? [j/N]: ").strip().lower()
-            if confirm in ["j", "y", "ja", "yes"]:
-                return template
-            else:
-                print("❌ Verworfen")
-                return None
-
-        except KeyboardInterrupt:
-            print("\n❌ Abgebrochen")
-            return None
+    def _parse_event_data(
+        self, 
+        ocr_text: str, 
+        image_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """
+        Parse event data from OCR text using simple heuristics.
+        
+        Args:
+            ocr_text: OCR text
+            image_data: Image metadata with caption/alt-text
+            
+        Returns:
+            Parsed event fields
+        """
+        import re
+        
+        data = {
+            "title": "Event Draft (OCR)",
+            "venue": "TBD",
+            "date": "TBD",
+            "time": "TBD",
+            "description": "",
+        }
+        
+        if not ocr_text:
+            return data
+        
+        lines = [line.strip() for line in ocr_text.split('\n') if line.strip()]
+        
+        # First non-empty line often contains title
+        if lines:
+            data["title"] = lines[0][:100]
+        
+        # Look for dates (YYYY-MM-DD, DD.MM.YYYY, DD/MM/YYYY)
+        date_patterns = [
+            r'\b(\d{4}[-/]\d{1,2}[-/]\d{1,2})\b',  # 2025-12-31
+            r'\b(\d{1,2}[./]\d{1,2}[./]\d{4})\b',  # 31.12.2025
+            r'\b(\d{1,2}[./]\d{1,2}[./]\d{2})\b',  # 31.12.25
+        ]
+        for pattern in date_patterns:
+            match = re.search(pattern, ocr_text)
+            if match:
+                data["date"] = match.group(1)
+                break
+        
+        # Look for time (HH:MM, HH.MM, HHhMM)
+        time_pattern = r'\b(\d{1,2}[:h.]\d{2})\s*(Uhr|uhr)?\b'
+        match = re.search(time_pattern, ocr_text)
+        if match:
+            data["time"] = match.group(1).replace('h', ':').replace('.', ':')
+        
+        # Look for venue/location keywords
+        venue_keywords = ['@', 'im ', 'in ', 'bei ', 'Ort:', 'Location:', 'Venue:']
+        for line in lines:
+            for keyword in venue_keywords:
+                if keyword.lower() in line.lower():
+                    data["venue"] = line[:100]
+                    break
+        
+        # Use caption as description fallback
+        caption = image_data.get("caption", "")
+        if caption:
+            data["description"] = caption[:500]
+        
+        return data
 
     def save_event(self, event: Dict[str, Any], output_dir: Path) -> Path:
         """
@@ -361,66 +494,106 @@ class ImageStreamExtractor:
 
 
 def main():
-    """CLI for image stream extraction."""
+    """CLI for batch image OCR processing."""
     import argparse
 
     parser = argparse.ArgumentParser(
-        description="Extract events from social media images"
+        description="Batch OCR extraction from social media or local images"
     )
     parser.add_argument(
-        "source", choices=["instagram", "facebook"], help="Social media source"
+        "source", 
+        choices=["instagram", "facebook", "local"], 
+        help="Source: instagram, facebook, or local files"
     )
-    parser.add_argument("profile", help="Profile name or page ID")
     parser.add_argument(
-        "--count", "-n", type=int, default=5, help="Number of images to check"
+        "profile", 
+        help="Profile name, page ID, or local path (file/directory)"
     )
-    parser.add_argument("--output", "-o", default="_events", help="Output directory")
-    parser.add_argument("--fb-token", help="Facebook API token")
-    parser.add_argument("--ocr", action="store_true", help="Run OCR on images (slow)")
+    parser.add_argument(
+        "--recursive", "-r", action="store_true",
+        help="Search local directory recursively"
+    )
+    parser.add_argument(
+        "--count", "-n", type=int, default=5, 
+        help="Number of images to process"
+    )
+    parser.add_argument(
+        "--output-dir", "-o", default="_events", 
+        help="Output directory for event JSONs"
+    )
+    parser.add_argument(
+        "--output-json", help="Save all results to single JSON file"
+    )
+    parser.add_argument(
+        "--fb-token", help="Facebook API token"
+    )
+    parser.add_argument(
+        "--batch", action="store_true", 
+        help="Batch mode: automatic OCR, no interaction (default)"
+    )
+    parser.add_argument(
+        "--ocr", action="store_true", 
+        help="Enable OCR (required for batch mode)"
+    )
 
     args = parser.parse_args()
 
     extractor = ImageStreamExtractor()
 
+    # Check OCR availability
+    if not extractor.has_ocr:
+        print("❌ OCR nicht verfügbar!")
+        print("Installation:")
+        print("  sudo apt-get install tesseract-ocr tesseract-ocr-deu")
+        print("  pip install pytesseract pillow")
+        return 1
+
     # Fetch images
+    print(f"📥 Lade Bilder von {args.source}...")
+    
     if args.source == "instagram":
         images = extractor.fetch_instagram_images(args.profile, args.count)
-    else:
+    elif args.source == "facebook":
         images = extractor.fetch_facebook_images(
             args.profile, args.count, args.fb_token
         )
+    elif args.source == "local":
+        images = extractor.load_local_images(args.profile, args.recursive)
+        # Limit to count if specified
+        if args.count and len(images) > args.count:
+            images = images[:args.count]
 
     if not images:
         print("❌ Keine Bilder gefunden")
-        return
+        return 1
 
-    print(f"\n✓ {len(images)} Bilder geladen\n")
+    print(f"✓ {len(images)} Bilder geladen\n")
 
-    # Process each image
-    events_created = 0
-    output_dir = Path(args.output)
+    # Batch OCR processing
+    events = extractor.batch_ocr(
+        images, 
+        output_json=Path(args.output_json) if args.output_json else None
+    )
 
-    for i, image_data in enumerate(images):
-        print(f"\n{'='*80}")
-        print(f"Bild {i+1}/{len(images)}")
-
-        # OCR if requested
-        ocr_text = ""
-        if args.ocr:
-            print("🔍 Führe OCR aus...")
-            ocr_text = extractor.extract_text_from_image(image_data["image_path"])
-
-        # Interactive editor
-        event = extractor.interactive_event_editor(image_data, ocr_text)
-
-        if event:
-            filepath = extractor.save_event(event, output_dir)
-            print(f"\n✅ Gespeichert: {filepath}")
-            events_created += 1
+    # Save individual event files
+    output_dir = Path(args.output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    
+    print(f"\n💾 Speichere Event-Drafts nach {output_dir}/...")
+    
+    for event in events:
+        filepath = extractor.save_event(event, output_dir)
+        print(f"  ✓ {filepath.name}")
 
     print(f"\n{'='*80}")
-    print(f"🎉 Fertig! {events_created}/{len(images)} Events erstellt")
+    print(f"🎉 Fertig! {len(events)} Event-Drafts erstellt")
+    print(f"📁 Ausgabe: {output_dir}/")
+    if args.output_json:
+        print(f"📄 JSON: {args.output_json}")
+    
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    import sys
+    sys.exit(main() or 0)

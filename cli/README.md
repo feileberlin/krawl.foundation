@@ -1,24 +1,24 @@
 # CLI Tools - krawl.foundation
 
-Command-line tools für Event-Scraping und Datenmanagement.
+Command-line tools für Event-Scraping, OCR und Datenmanagement.
 
 ## 🚀 Quick Start
 
 ```bash
 # Installation
 pip install -r requirements.txt
+sudo apt-get install tesseract-ocr tesseract-ocr-deu  # Für OCR
 
 # CLI ausführbar machen
 chmod +x cli/event_scraper.py
+chmod +x cli/image_extractor.py
 
 # Hilfe anzeigen
-./cli/event_scraper.py
-
-# Oder direkt mit Python
-python cli/event_scraper.py
+./cli/event_scraper.py --help
+./cli/image_extractor.py --help
 ```
 
-## 📋 Kommandoreferenz
+## 📋 event_scraper.py - Event Management
 
 ### `list` - Events auflisten
 
@@ -40,12 +40,6 @@ python cli/event_scraper.py
 ./cli/event_scraper.py diff event1.json event2.json --format json
 ```
 
-**Was wird verglichen:**
-- Neue Felder (in event2, aber nicht in event1)
-- Entfernte Felder (in event1, aber nicht in event2)
-- Geänderte Felder mit Alt/Neu-Werten
-- Unveränderte Felder
-
 ### `merge` - Events zusammenführen
 
 ```bash
@@ -57,33 +51,15 @@ python cli/event_scraper.py
   -f title,date,venue -o output.json
 ```
 
-**Use Cases:**
-- Automatisch gescrapte Daten mit manuell kuratierten zusammenführen
-- Einzelne Felder von externen Quellen übernehmen
-- Bulk-Updates mit selektivem Merge
-
 ### `generate` - Test-Events erzeugen
 
 ```bash
-# Ein Concert-Event
-./cli/event_scraper.py generate
-
 # 10 Events
 ./cli/event_scraper.py generate --count 10
-
-# Exhibition-Events
-./cli/event_scraper.py generate --type exhibition -n 5
 
 # In anderes Verzeichnis
 ./cli/event_scraper.py generate -n 20 -o tests/fixtures
 ```
-
-**Generierte Felder:**
-- Titel (realistisch mit Faker)
-- Datum (zukünftig, nächste 90 Tage)
-- Location (deutsche Städte)
-- Description (Lorem Ipsum Text)
-- Venue, URL, Genre/Typ, Preis
 
 ### `bulk` - Massenoperationen
 
@@ -95,44 +71,82 @@ python cli/event_scraper.py
 ./cli/event_scraper.py bulk --set-field status draft --dry-run
 ```
 
-### `scrape` - Events scrapen (TODO)
+## 🔍 image_extractor.py - Batch OCR Processing
+
+**Neu in Version 2.0:** Vollautomatische Batch-OCR ohne User-Interaktion.
+
+### Local Files - Batch OCR
 
 ```bash
-# Von URL scrapen
-./cli/event_scraper.py scrape https://example.com/events -o new_events.json
+# Single file
+./cli/image_extractor.py local flyer.jpg --ocr --output-dir _events
 
-# Und direkt mit existierenden vergleichen
-./cli/event_scraper.py scrape https://example.com/events -c existing.json
+# Entire directory (non-recursive)
+./cli/image_extractor.py local /path/to/flyers/ --ocr -o _events
+
+# Recursive scan
+./cli/image_extractor.py local /path/to/flyers/ --ocr -r -o _events
+
+# Save all results to single JSON
+./cli/image_extractor.py local .cache/telegram/ \
+  --ocr \
+  --output-json results.json \
+  --output-dir _events
+```
+
+### Instagram - Batch OCR
+
+```bash
+# Latest 5 posts with OCR
+./cli/image_extractor.py instagram punkinhof --count 5 --ocr
+
+# More posts
+./cli/image_extractor.py instagram punkinhof -n 10 --ocr -o _events
+```
+
+### Facebook - Batch OCR
+
+```bash
+# Requires FB_TOKEN
+./cli/image_extractor.py facebook GaleriehausHof \
+  --fb-token YOUR_TOKEN \
+  --count 5 \
+  --ocr \
+  -o _events
 ```
 
 ## 🔧 Workflows
 
-### Workflow 1: Neue Events von Website scrapen
+### Workflow 1: Telegram Flyer Processing
 
 ```bash
-# 1. Scrape
-./cli/event_scraper.py scrape https://venue.com/events -o scraped.json
+# Simuliere Telegram-Upload (lokal)
+cp flyer.jpg .cache/telegram/
 
-# 2. Vergleich mit existierendem Event
-./cli/event_scraper.py diff _events/existing-event.json scraped.json
+# Batch OCR
+./cli/image_extractor.py local .cache/telegram/ \
+  --ocr \
+  --output-json telegram_events.json \
+  -o _events
 
-# 3. Selektives Merge (z.B. nur Titel und Datum aktualisieren)
-./cli/event_scraper.py merge \
-  _events/existing-event.json \
-  scraped.json \
-  -f title,date \
-  -o _events/existing-event.json
+# Review Drafts
+cat telegram_events.json | jq .
+
+# Approve Draft
+./cli/event_scraper.py bulk --set-field status reviewed
 ```
 
-### Workflow 2: Test-Daten für Development
+### Workflow 2: Instagram Scraping Pipeline
 
 ```bash
-# Testdaten generieren
-./cli/event_scraper.py generate -n 50 -o tests/fixtures
+# 1. Extract mit OCR
+./cli/image_extractor.py instagram punkinhof -n 10 --ocr -o _events
 
-# Mit verschiedenen Typen
-./cli/event_scraper.py generate -n 25 --type concert -o tests/fixtures
-./cli/event_scraper.py generate -n 25 --type exhibition -o tests/fixtures
+# 2. Liste neue Drafts
+./cli/event_scraper.py list --format json | jq 'select(.status == "draft")'
+
+# 3. Bulk-Review
+./cli/event_scraper.py bulk --set-field status reviewed
 ```
 
 ### Workflow 3: Bulk-Update aller Events
@@ -143,93 +157,64 @@ python cli/event_scraper.py
 
 # Tatsächlich ausführen
 ./cli/event_scraper.py bulk --set-field reviewed true
+```
 
-# Status für alle auf draft
-./cli/event_scraper.py bulk --set-field status draft
+## 🆕 Änderungen in Version 2.0
+
+### ✅ Neu
+- **Batch OCR:** Vollautomatische Verarbeitung ohne User-Interaktion
+- **Smart Parsing:** Automatische Extraktion von Datum, Uhrzeit, Venue
+- **Telegram Integration:** Direkter Support für Telegram Bot Uploads
+- **JSON Output:** `--output-json` für strukturierte Batch-Results
+
+### ❌ Entfernt
+- **Interaktiver Editor:** Keine User-Prompts mehr (war: `interactive_event_editor()`)
+- **Terminal Image Viewer:** Keine imgcat/chafa Integration mehr
+- **Manual Input:** Keine Feld-für-Feld Eingabe mehr
+
+### 🔄 Migrationsguide
+
+**Alt (Version 1.0):**
+```bash
+# Interaktiver Modus (deprecated)
+./cli/image_extractor.py local flyer.jpg --ocr
+# → Prompted für jeden Event-Feld
+```
+
+**Neu (Version 2.0):**
+```bash
+# Batch-Modus (automatisch)
+./cli/image_extractor.py local flyer.jpg --ocr -o _events
+# → Automatische OCR + Parsing
+# → Direkt als Draft gespeichert
 ```
 
 ## 🎯 Best Practices
 
 ### 1. Immer Backups vor Bulk-Operations
 ```bash
-# Events sichern
 cp -r _events _events.backup.$(date +%Y%m%d-%H%M%S)
-
-# Oder mit Git
-git add _events && git commit -m "backup before bulk operation"
 ```
 
-### 2. Dry-Run nutzen
-```bash
-# Erst prüfen
-./cli/event_scraper.py bulk --set-field status published --dry-run
+### 2. OCR-Qualität verbessern
+- Scharfes Foto
+- Gute Beleuchtung
+- Text nicht zu klein
 
-# Dann ausführen
-./cli/event_scraper.py bulk --set-field status published
-```
-
-### 3. Strukturiertes Merge-Workflow
-```bash
-# 1. Diff checken
-./cli/event_scraper.py diff old.json new.json
-
-# 2. Gezielt einzelne Felder mergen
-./cli/event_scraper.py merge old.json new.json -f date,venue -o merged.json
-
-# 3. Review
-cat merged.json | jq .
-
-# 4. Übernehmen
-mv merged.json _events/final-event.json
-```
-
-### 4. Event-IDs konsistent halten
-- Nutze URL oder eindeutige externe ID als Basis
-- Format: `{venue}-{date}-{slug}` (z.B. `berghain-2025-12-01-techno-night`)
-- Verhindert Duplikate
-
-### 5. Status-Workflow implementieren
+### 3. Status-Workflow
 ```json
 {
   "status": "draft",      // Gerade erstellt/gescraped
   "status": "reviewed",   // Redaktionell geprüft
-  "status": "published",  // Live auf Website
-  "status": "archived"    // Event ist vorbei
+  "status": "published"   // Live auf Website
 }
 ```
-
-## 🔮 Geplante Features
-
-- [ ] **Smart Deduplication**: Events automatisch als Duplikat erkennen
-- [ ] **Filter in Bulk**: `--filter "status==draft"` für selektive Updates
-- [ ] **Diff-Visualisierung**: Colored terminal output für Unterschiede
-- [ ] **Import/Export**: CSV, iCal, andere Formate
-- [ ] **Validation**: JSON Schema für Event-Struktur
-- [ ] **History**: Git-basierte Change-Tracking
-
-## 🐛 Debugging
-
-```bash
-# Python im verbose mode
-python -v cli/event_scraper.py list
-
-# Mit Debugger
-python -m pdb cli/event_scraper.py diff event1.json event2.json
-
-# Output in Datei für Analyse
-./cli/event_scraper.py list --format json > debug-output.json
-```
-
-## 📚 Project History
-
-This project is a ground-up rewrite. The original vision and philosophy are preserved in:
-→ [`docs/archive/`](docs/archive/) (read-only historical reference)
-
-**Current implementation status:** See [`_data/features.yml`](_data/features.yml )
-
 
 ## 📚 Weitere Ressourcen
 
 - `/tests/` - Unit Tests und Fixtures
 - `/docs/` - Erweiterte Dokumentation
 - `.github/workflows/` - GitHub Actions Setup
+- `docs/TELEGRAM_SUBMISSIONS.md` - Telegram Bot Setup
+- `docs/SECRETS.md` - Secrets Management
+- `docs/WORKFLOWS.md` - GitHub Actions Workflows
