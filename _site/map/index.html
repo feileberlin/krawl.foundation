@@ -1,0 +1,158 @@
+<div id="map-container" role="application" aria-label="Interactive Event Map">
+  <!-- Leaflet Map -->
+  <div id="map" tabindex="0" role="img" aria-label="Map showing event locations"></div>
+  
+  <!-- Filter Bar (Sentence Format) -->
+  <div id="filter-bar" role="region" aria-live="polite" aria-atomic="true">
+    <span id="event-count" class="filter-part">1 events</span>
+    <span class="filter-separator">of</span>
+    
+    <select id="category-filter" class="filter-part" aria-label="Filter by category">
+      <option value="all">any type</option>
+      
+      <option value="dancefloor">dancefloor</option>
+      
+      <option value="onStage">on stage</option>
+      
+      <option value="exhibitions">exhibitions</option>
+      
+      <option value="markets">markets</option>
+      
+      <option value="concerts">concerts</option>
+      
+      <option value="education">education</option>
+      
+      <option value="withChildren">with children</option>
+      
+    </select>
+    
+    <select id="time-filter" class="filter-part" aria-label="Filter by time">
+      
+      <option value="tillSunrise" selected>
+        till sunrise
+      </option>
+      
+      <option value="thisWeek" >
+        this week
+      </option>
+      
+      <option value="tillFullMoon" >
+        till full moon
+      </option>
+      
+      <option value="withoutLimit" >
+        without limit
+      </option>
+      
+    </select>
+    
+    <select id="distance-filter" class="filter-part" aria-label="Filter by distance">
+      
+      <option value="withinOneKm" >
+        within 1km
+      </option>
+      
+      <option value="withinThreeKm" selected>
+        within 3km
+      </option>
+      
+      <option value="withinTenKm" >
+        within 10km
+      </option>
+      
+      <option value="geoLocation" >
+        from my location
+      </option>
+      
+    </select>
+    
+    <span class="filter-separator">from</span>
+    
+    <select id="location-filter" class="filter-part" aria-label="Change map center">
+      
+      <option value="townHall" 
+              data-lat="52.52" 
+              data-lng="13.405"
+              selected>
+        town hall
+      </option>
+      
+      <option value="centralStation" 
+              data-lat="52.5251" 
+              data-lng="13.3694"
+              >
+        central station
+      </option>
+      
+    </select>
+  </div>
+  
+  <!-- Event Flyer (Paper Style) -->
+  <details id="event-flyer" class="flyer" aria-hidden="true">
+    <summary class="sr-only">Event Details</summary>
+    <article class="flyer-content" role="dialog" aria-labelledby="flyer-title">
+      <!-- Populated by JavaScript -->
+    </article>
+    <button id="flyer-close" aria-label="Close event details" class="sr-only-focusable">×</button>
+  </details>
+</div>
+
+<!-- Event Data (JSON for JavaScript) -->
+<script type="application/json" id="events-data">
+[
+  
+  
+  {
+    "id": "beispiel-konzert",
+    "title": "Konzert im Kulturzentrum",
+    "date": "2025-12-01T20:00:00+01:00",
+    "lat": 52.52,
+    "lng": 13.405,
+    "category": "uncategorized",
+    "organizer": {
+      "name": "Kulturverein Berlin e.V.",
+      "avatar": "/assets/img/default-avatar.svg"
+    },
+    "venue": {
+      "name": "Kulturzentrum Berlin",
+      "address": "Kulturstraße 42"
+    },
+    "contact": {
+      "website": "",
+      "email": ""
+    }
+  }
+  
+]
+</script>
+
+<!-- Map Configuration -->
+<script type="application/json" id="map-config">
+{
+  "center": { "lat": 52.52, "lng": 13.405 },
+  "zoom": 13,
+  "tiles": {
+    "url": "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+    "attribution": "© OpenStreetMap",
+    "maxZoom": 19
+  },
+  "defaults": {
+    "category": "all",
+    "time": "tillSunrise",
+    "distance": "withinThreeKm",
+    "location": "townHall"
+  },
+  "filters": {
+    "categories": [{"id":"dancefloor","label":"Dancefloor","icon":"🕺"},{"id":"onStage","label":"On Stage","icon":"🎭"},{"id":"exhibitions","label":"Exhibitions","icon":"🖼️"},{"id":"markets","label":"Markets","icon":"🛍️"},{"id":"concerts","label":"Concerts","icon":"🎵"},{"id":"education","label":"Education","icon":"📚"},{"id":"withChildren","label":"With Children","icon":"👨‍👩‍👧"}],
+    "time": [{"id":"tillSunrise","label":"till sunrise","hours":12},{"id":"thisWeek","label":"this week","days":7},{"id":"tillFullMoon","label":"till full moon","dynamic":true},{"id":"withoutLimit","label":"without limit","unlimited":true}],
+    "distance": [{"id":"withinOneKm","label":"within 1km","meters":1000},{"id":"withinThreeKm","label":"within 3km","meters":3000},{"id":"withinTenKm","label":"within 10km","meters":10000},{"id":"geoLocation","label":"from my location","use_geolocation":true}],
+    "locations": [{"name":"Town Hall","id":"townHall","lat":52.52,"lng":13.405},{"name":"Central Station","id":"centralStation","lat":52.5251,"lng":13.3694}]
+  }
+}
+</script>
+
+<!-- Leaflet Library (local assets) -->
+<link rel="stylesheet" href="/assets/vendor/leaflet/leaflet.css">
+<link rel="stylesheet" href="/assets/css/map.css">
+<script src="/assets/vendor/leaflet/leaflet.js"></script>
+<script src="/assets/js/map.js" defer></script>

@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="de"><generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator><link href="https://feileberlin.github.io/events/feed.xml" rel="self" type="application/atom+xml" /><link href="https://feileberlin.github.io/" rel="alternate" type="text/html" hreflang="de" /><updated>2025-11-22T07:10:05+01:00</updated><id>https://feileberlin.github.io/events/feed.xml</id><title type="html">krawl.foundation | Events</title><subtitle>Lernprojekt: Event-Plattform von Grund auf neu strukturiert. KISS-Prinzip, debugfreundlich, zukunftssicher.
+</subtitle><author><name>Stefan Schmitt</name><email></email></author><entry><title type="html">Konzert im Kulturzentrum</title><link href="https://feileberlin.github.io/events/beispiel-konzert/" rel="alternate" type="text/html" title="Konzert im Kulturzentrum" /><published>2025-12-01T20:00:00+01:00</published><updated>2025-12-01T20:00:00+01:00</updated><id>https://feileberlin.github.io/events/beispiel-konzert</id><content type="html" xml:base="https://feileberlin.github.io/events/beispiel-konzert/"><![CDATA[<!-- ============================================================================
+     EVENT BESCHREIBUNG (Markdown)
+     ============================================================================
+     Alles nach den --- wird als Event-Content angezeigt.
+     Du kannst Markdown-Formatierung nutzen.
+============================================================================ -->
+
+<p>Die Indie-Rock-Band <strong>The Example Band</strong> kommt nach Berlin!</p>
+
+<p>Erlebt eine unvergessliche Nacht mit den besten Hits der letzten Jahre und brandneuen Songs aus dem kommenden Album “Future Sounds”.</p>
+
+<h2 id="-line-up">🎵 Line-Up</h2>
+
+<ul>
+  <li><strong>20:00</strong> - Einlass &amp; Warm-Up DJ</li>
+  <li><strong>21:00</strong> - Support Act: Local Heroes</li>
+  <li><strong>22:00</strong> - The Example Band (Main Act)</li>
+  <li><strong>23:30</strong> - Ende</li>
+</ul>
+
+<h2 id="-über-die-band">🎤 Über die Band</h2>
+
+<p>The Example Band wurde 2018 gegründet und hat sich schnell einen Namen in der Indie-Szene gemacht. Ihr Debütalbum “First Steps” erreichte Platz 5 in den deutschen Indie-Charts.</p>
+
+<h3 id="bandmitglieder">Bandmitglieder</h3>
+
+<ul>
+  <li>Alex Müller - Vocals, Gitarre</li>
+  <li>Sarah Schmidt - Bass</li>
+  <li>Tom Wagner - Drums</li>
+</ul>
+
+<h2 id="-tickets">🎫 Tickets</h2>
+
+<ul>
+  <li><strong>Online</strong>: <a href="https://tickets.example.com/event/12345">tickets.example.com</a></li>
+  <li><strong>VVK</strong>: 12€ (bis 30.11.)</li>
+  <li><strong>Abendkasse</strong>: 15€</li>
+  <li><strong>Ermäßigt</strong>: 10€ (Schüler, Studenten, Rentner)</li>
+</ul>
+
+<blockquote>
+  <p>⚠️ <strong>Hinweis</strong>: Tickets sind streng limitiert. Vorverkauf wird empfohlen!</p>
+</blockquote>
+
+<h2 id="-anfahrt">📍 Anfahrt</h2>
+
+<p><strong>Kulturzentrum Berlin</strong><br />
+Kulturstraße 42<br />
+10115 Berlin</p>
+
+<p><strong>Öffentliche Verkehrsmittel:</strong></p>
+<ul>
+  <li>U-Bahn: U6 bis Naturkundemuseum (5 Min. Fußweg)</li>
+  <li>S-Bahn: S1, S2, S25 bis Nordbahnhof (7 Min. Fußweg)</li>
+  <li>Bus: 120, 142, 245</li>
+</ul>
+
+<p><strong>Parken:</strong><br />
+Parkhaus Kulturplatz (2 Min. Fußweg)</p>
+
+<h2 id="ℹ️-wichtige-infos">ℹ️ Wichtige Infos</h2>
+
+<ul>
+  <li>Einlass ab 18 Jahren</li>
+  <li>Garderobe vorhanden (1€)</li>
+  <li>Bargeldlose Zahlung möglich</li>
+  <li>Rauchen nur im Außenbereich</li>
+</ul>
+
+<h2 id="-fotos--social-media">📸 Fotos &amp; Social Media</h2>
+
+<p>Teile deine Erlebnisse mit:</p>
+<ul>
+  <li>Instagram: <a href="https://instagram.com/kulturzentrum_berlin">@kulturzentrum_berlin</a></li>
+  <li>Facebook: <a href="https://facebook.com/kulturzentrum">Kulturzentrum Berlin</a></li>
+  <li>Hashtag: #ExampleBandBerlin</li>
+</ul>
+
+<hr />
+
+<p><strong>Veranstalter:</strong> Kulturverein Berlin e.V.<br />
+<strong>Kontakt:</strong> info@kulturzentrum-berlin.de<br />
+<strong>Telefon:</strong> +49 30 12345678</p>]]></content><author><name>Stefan Schmitt</name></author><category term="konzert" /><category term="live-musik" /><category term="indie-rock" /><summary type="html"><![CDATA[]]></summary></entry></feed>
