@@ -46,3 +46,40 @@ pytest-cov>=4.1.0
 # ----------------------------------------------------------------------------
 # ENDE
 # ============================================================================
+
+# ----------------------------------------------------------------------------
+# IMAGE PROCESSING & OCR
+# ----------------------------------------------------------------------------
+
+# Image Processing (requires system package: apt-get install imagemagick)
+pillow>=10.0.0
+
+# OCR (requires system packages: apt-get install tesseract-ocr tesseract-ocr-deu tesseract-ocr-eng)
+pytesseract>=0.3.10
+
+# ----------------------------------------------------------------------------
+# SOCIAL MEDIA SCRAPING
+# ----------------------------------------------------------------------------
+
+# Instagram Scraping
+instaloader>=4.10.0
+
+# ----------------------------------------------------------------------------
+# TELEGRAM BOT
+# ----------------------------------------------------------------------------
+
+# Telegram Bot API
+python-telegram-bot>=20.0
+
+# Environment Variables
+python-dotenv>=1.0.0
+
+# ----------------------------------------------------------------------------
+# VOICE TRANSCRIPTION
+# ----------------------------------------------------------------------------
+
+# VOSK Speech Recognition (requires VOSK models download)
+vosk>=0.3.45
+
+# Audio Processing (requires system package: apt-get install ffmpeg)
+pydub>=0.25.1

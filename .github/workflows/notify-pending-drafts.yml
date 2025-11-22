@@ -1,7 +1,7 @@
 name: ⚠️ Draft Alerts (auto)
 
 on:
-  workflow_call:  # Triggered by Event Bot
+  workflow_call:  # Triggered by Event Bot or Telegram Bot
     inputs:
       threshold_hours:
         description: 'Alert threshold (hours)'
@@ -13,6 +13,9 @@ on:
         description: 'Alert threshold (hours)'
         type: number
         default: 6
+  schedule:
+    # Check every 6 hours for pending drafts
+    - cron: '0 */6 * * *'
 
 permissions:
   contents: read
