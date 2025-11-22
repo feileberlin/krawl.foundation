@@ -98,7 +98,7 @@ jobs:
             --arg username "$USERNAME" \
             --arg created_at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
             '{
-              "_comment": "# Original message: " + $text,
+              "_comment": "# Original message: \($text)",
               "status": "draft",
               "source": "telegram",
               "message_type": "text",
@@ -299,7 +299,7 @@ jobs:
             --arg image_file "$TARGET_NAME" \
             --arg created_at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
             '{
-              "_comment": ("# OCR Text: " + $ocr),
+              "_comment": "# OCR Text: \($ocr)"
               "status": "draft",
               "source": "telegram",
               "message_type": "photo",
