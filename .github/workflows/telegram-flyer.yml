@@ -215,14 +215,40 @@ jobs:
           USER_ID: ${{ steps.payload.outputs.user_id }}
           USERNAME: ${{ steps.payload.outputs.username }}
         run: |
+          set -e
           mkdir -p .cache/telegram
           
           TARGET_NAME="${FILENAME:-workflow-test-photo.jpg}"
           OCR_TEXT=""
 
           if [[ "$TEST_MODE" == "true" ]]; then
-            echo "ℹ️ Test mode – skipping Telegram download and OCR."
-            printf 'Test photo placeholder' > ".cache/telegram/${TARGET_NAME}"
+            echo "ℹ️ Test mode – creating synthetic test flyer..."
+            
+            # Install ImageMagick
+            sudo apt-get update -qq
+            sudo apt-get install -y imagemagick
+            
+            # Allow ImageMagick to work with PDFs (policy fix)
+            sudo sed -i 's/rights="none" pattern="PDF"/rights="read|write" pattern="PDF"/' /etc/ImageMagick-6/policy.xml 2>/dev/null || true
+            
+            # Create test flyer image
+            convert -size 800x1200 xc:white \
+              -font DejaVu-Sans-Bold \
+              -pointsize 48 -fill black \
+              -annotate +50+100 "TEST KONZERT" \
+              -pointsize 32 \
+              -annotate +50+200 "01.01.2026 20:00 Uhr" \
+              -annotate +50+280 "Galeriehaus Hof, Berlin" \
+              -annotate +50+360 "Eintritt: 10 EUR" \
+              ".cache/telegram/${TARGET_NAME}"
+            
+            # Verify creation
+            if [[ ! -f ".cache/telegram/${TARGET_NAME}" ]]; then
+              echo "❌ Failed to create test image" >&2
+              exit 1
+            fi
+            
+            echo "✅ Test image created: $(ls -lh .cache/telegram/${TARGET_NAME})"
             OCR_TEXT="(Testlauf ohne Bild)"
           else
             if [[ -z "$FILE_ID" ]]; then
@@ -347,15 +373,18 @@ jobs:
             });
       
       - name: Trigger draft notification
-        if: steps.payload.outputs.test_mode == 'false' && secrets.WORKFLOW_DISPATCH_TOKEN != ''
+        if: steps.payload.outputs.test_mode == 'false' && env.WORKFLOW_DISPATCH_TOKEN != ''
         run: |
           gh workflow run notify-pending-drafts.yml --ref main
         env:
+          WORKFLOW_DISPATCH_TOKEN: ${{ secrets.WORKFLOW_DISPATCH_TOKEN }}
           GH_TOKEN: ${{ secrets.WORKFLOW_DISPATCH_TOKEN }}
 
       - name: Skip draft notification (missing token)
-        if: steps.payload.outputs.test_mode == 'false' && secrets.WORKFLOW_DISPATCH_TOKEN == ''
+        if: steps.payload.outputs.test_mode == 'false' && env.WORKFLOW_DISPATCH_TOKEN == ''
         run: echo "ℹ️ WORKFLOW_DISPATCH_TOKEN not set – skipping draft reminder trigger."
+        env:
+          WORKFLOW_DISPATCH_TOKEN: ${{ secrets.WORKFLOW_DISPATCH_TOKEN }}
 
       - name: Skip git actions in test mode
         if: steps.payload.outputs.test_mode == 'true'
