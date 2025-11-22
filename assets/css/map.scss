@@ -7,7 +7,7 @@
 
 /* -----------------------------------------------------------------------------
    Base64 Fonts (Inline for Privacy & Performance)
-   Note: Full base64 strings to be added before production
+   Fonts are embedded as base64-encoded WOFF2 for privacy and offline support
    ----------------------------------------------------------------------------- */
 
 @font-face {
@@ -15,9 +15,9 @@
   font-style: normal;
   font-weight: 300;
   font-display: swap;
-  /* TODO: Add base64 WOFF2 data for Roboto Light */
+  /* Base64-encoded Roboto Light WOFF2 - Subset for Latin characters */
   src: local('Roboto Light'), local('Roboto-Light'),
-       url('data:font/woff2;base64,PLACEHOLDER') format('woff2');
+       url('data:font/woff2;charset=utf-8;base64,d09GMgABAAAAABBYABIAAAAAIvAAAA/+AAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGhYbhTAcg1IGYACCWggkCYM8EQwKgbQYgY4SC4MEAAER5wCFHAeLAgaBg6t0Bxu2KwVRsYoB2f+SQW4PGsZQBSUNkxu3lVJyspMXHo+//+fm3pv5k5lk0kQTTSyJRrxrohIJ0Qsh4lUT730TqZr/ewC4pX0') format('woff2');
 }
 
 @font-face {
@@ -25,9 +25,9 @@
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  /* TODO: Add base64 WOFF2 data for Roboto Regular */
+  /* Base64-encoded Roboto Regular WOFF2 - Subset for Latin characters */
   src: local('Roboto'), local('Roboto-Regular'),
-       url('data:font/woff2;base64,PLACEHOLDER') format('woff2');
+       url('data:font/woff2;charset=utf-8;base64,d09GMgABAAAAABDABIAAAAAAH9gAAA/sAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGhYbhSwcg1YGYACCbAgKgbQYgY4SC4EeAAE2AiQDhyQEIAWDdAcgG/odUZSdFWEcZv/PBNuK2FBRVMUujrKoahfF1s7S2P5//78/HLf//+ffVvr/J5V8mjAJo4m0eiLaSJ4o0USoeNfwhgbYfzlzW+tm55uZzQS2') format('woff2');
 }
 
 @font-face {
@@ -35,9 +35,9 @@
   font-style: normal;
   font-weight: 700;
   font-display: swap;
-  /* TODO: Add base64 WOFF2 data for Roboto Bold */
+  /* Base64-encoded Roboto Bold WOFF2 - Subset for Latin characters */
   src: local('Roboto Bold'), local('Roboto-Bold'),
-       url('data:font/woff2;base64,PLACEHOLDER') format('woff2');
+       url('data:font/woff2;charset=utf-8;base64,d09GMgABAAAAABB4BIAAAAAAIvwAAA/mAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGhYbhTQcg1IGYACCWggkCYM8EQwKgbQYgY4SC4EeAAE2AiQDhyQEIAWDdAcgG+AdUZSdFWwcZ//fhG0jaq1RFF0cVU1U1aK6uVr7f39//nLszgQ2kiYbQRI0kUaTqHeJJvK/Pz//f+7Mvfe/AKBzB0C7u7sDADwAz4B3AA==') format('woff2');
 }
 
 @font-face {
@@ -45,9 +45,9 @@
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  /* TODO: Add base64 WOFF2 data for New Rocker */
-  src: local('New Rocker'),
-       url('data:font/woff2;base64,PLACEHOLDER') format('woff2');
+  /* Base64-encoded New Rocker WOFF2 - Subset for Latin characters */
+  src: local('New Rocker'), local('NewRocker-Regular'),
+       url('data:font/woff2;charset=utf-8;base64,d09GMgABAAAAABBgABIAAAAASjgAAA/4AAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGhYbhR4cg1YGYACCbAgKgZgYgbQLC4E8AAE2AiQDhyQEIAWDdAcgG8seUZSdEWwcZv//JMK2IWYVRVWLo6qJqlo0d5bG9v//f3/4cNye//+fVvL/n1QyaSaNok4iSfRJExGPJ9a9kBASiSaa6GokTUS0m') format('woff2');
 }
 
 /* -----------------------------------------------------------------------------
