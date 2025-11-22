@@ -188,7 +188,7 @@ jobs:
             --arg voice_file "$TARGET_NAME" \
             --arg created_at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
             '{
-              "_comment": "# Transcription: " + $transcription,
+              "_comment": "# Transcription: \($transcription)",
               "status": "draft",
               "source": "telegram",
               "message_type": "voice",
