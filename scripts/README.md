@@ -330,7 +330,7 @@ test_setup
 
 - **[Bash Style Guide](https://google.github.io/styleguide/shellguide.html)**
 - **[Python PEP 8](https://pep8.org/)**
-- **[Development Guide](../docs/01-GETTING_STARTED.md)**
+- **[Development Guide](../ENTWICKLER.md)**
 
 ---
 

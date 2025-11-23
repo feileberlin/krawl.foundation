@@ -213,8 +213,5 @@ cp -r _events _events.backup.$(date +%Y%m%d-%H%M%S)
 ## 📚 Weitere Ressourcen
 
 - `/tests/` - Unit Tests und Fixtures
-- `/docs/` - Erweiterte Dokumentation
+- `/docs/archive/` - Archivierte Dokumentation (Referenz)
 - `.github/workflows/` - GitHub Actions Setup
-- `docs/TELEGRAM_SUBMISSIONS.md` - Telegram Bot Setup
-- `docs/SECRETS.md` - Secrets Management
-- `docs/WORKFLOWS.md` - GitHub Actions Workflows

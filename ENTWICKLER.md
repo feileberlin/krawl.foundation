@@ -329,7 +329,7 @@ Automatischer Deploy bei Push auf `main`:
 2. Deploy nach GitHub Pages
 3. Website live unter https://feileberlin.github.io/krawl.foundation/
 
-Custom Domain einrichten: `docs/01-GETTING_STARTED.md`
+Custom Domain einrichten: Siehe `ENTWICKLER.md` → Deployment
 
 ## 🐛 Debugging
 
