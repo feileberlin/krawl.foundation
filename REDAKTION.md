@@ -213,7 +213,7 @@ Events sollten passende Kategorien haben:
 - `workshop` - Lern-Events
 - `lesung` - Literatur, Poetry
 - `theater` - Theater, Performance
-- `kino` - Film-Vorführungen
+- `kino` - Filmvorführungen
 
 **Kategorien hinzufügen:**
 

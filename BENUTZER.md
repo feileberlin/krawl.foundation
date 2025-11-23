@@ -199,7 +199,7 @@ Die Karte braucht Internet. Aber: Du kannst Screenshots machen!
 
 ### 2. Events teilen
 
-**Share-Button nutzen:**
+**Teilen-Button nutzen:**
 Jeder Event-Flyer hat einen 📤 **Teilen**-Button.
 
 **Optionen:**
@@ -229,8 +229,8 @@ Umschalten: Einstellungen-Icon (⚙️) → "Hell/Dunkel"
 - `ESC`: Flyer schließen
 - `+`/`-`: Zoom in/out
 
-**Screen-Reader:**
-Alle Elemente sind Screen-Reader-freundlich beschriftet.
+**Bildschirmleser:**
+Alle Elemente sind Bildschirmleser-freundlich beschriftet.
 
 ## ❓ FAQ
 
