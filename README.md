@@ -1,16 +1,22 @@
-# 🎪 krawl.foundation
+# 🎪 KRaWL> Foundation
 
-**Event-Scraper CLI mit Diff, Merge und Bulk-Operations für strukturiertes Event-Datenmanagement.**
+**Deine Event-Plattform für Kultur und Nightlife – einfach, offen und für alle! 🎉**
 
-> Ein KISS-Prinzip Projekt zum Scrapen, Vergleichen und Verwalten von Event-Daten. Von Grund auf neu strukturiert, um aus früheren Erfahrungen (krawl.ist) zu lernen.
+> Ein KISS-Prinzip Projekt zum Entdecken, Sammeln und Verwalten von Events. Mit CLI-Tools für Entwickler, Web-Interface für User und automatischer Scraping-Pipeline für immer aktuelle Events.
 
-## 🎯 Ziele
+## 🎯 Was ist KRaWL> Foundation?
 
-- **Lernerfreundlich**: Klare Struktur, durchgehend dokumentiert, debugfreundlich
-- **CLI-First**: Kommandozeilen-Tool für alle Operationen
-- **Datenmanagement**: Events scrapen, vergleichen (diff), selektiv mergen
-- **Automatisierung**: GitHub Actions für periodisches Scraping
-- **Best Practices**: Moderne Python-Patterns, Testing, CI/CD
+KRaWL> Foundation ist eine **Open Source Event-Plattform**, die:
+- 🗺️ **Events auf einer Karte zeigt** (interaktiv, dark mode, responsive)
+- 📸 **Telegram Bot** für einfache Event-Submissions (Foto hochladen → fertig!)
+- 🤖 **Automatisches Scraping** von Instagram, Facebook & Co.
+- 🛠️ **CLI-Tools** für Entwickler (diff, merge, bulk-operations)
+- ✨ **Komplett kostenlos & werbefrei**
+
+**Für wen?**
+- 🎉 **User**: Events entdecken, einreichen, Favoriten speichern
+- 📝 **Redaktion**: Submissions moderieren, Events kuratieren
+- 🛠️ **Entwickler**: Scraper bauen, Features entwickeln, beitragen
 
 ## 🚀 Quick Start
 
@@ -31,97 +37,131 @@ source venv/bin/activate
 
 ## 📋 Features
 
-### ✅ Implementiert
+### ✅ Funktioniert
 
-- **List**: Alle Events auflisten (Tabelle oder JSON)
-- **Diff**: Zwei Events vergleichen, Unterschiede identifizieren
-- **Merge**: Events zusammenführen (alle Felder oder selektiv)
-- **Generate**: Lorem-Ipsum Test-Events nach Typ generieren
-- **Bulk**: Massenoperationen auf alle Events (mit Dry-Run)
-- **Testing**: Unit-Tests für alle Core-Funktionen
-- **CI/CD**: GitHub Actions für Tests und Auto-Scraping
+- ✅ **Interaktive Karte**: Dark Mode, responsive, Touch-freundlich
+- ✅ **Event-Verwaltung**: List, Diff, Merge, Bulk-Operations
+- ✅ **Image Extraction**: OCR für Social Media Flyer (Instagram, lokal)
+- ✅ **Test-Daten**: Lorem-Ipsum Generator für Development
+- ✅ **Telegram Bot**: Event-Submissions via Foto
+- ✅ **Auto-Scraping**: GitHub Actions für Instagram (alle 12h)
+- ✅ **Testing**: Unit-Tests mit pytest, CI/CD Pipeline
+
+### ⚠️ Teilweise / In Arbeit
+
+- ~~**Facebook Scraper**~~: ⚠️ Benötigt Facebook API Token
+- ~~**Instagram Scraper**~~: ⚠️ Teilweise funktionsfähig
+- ~~**URL Scraper**~~: ⚠️ Nur Placeholder, noch nicht implementiert
 
 ### 🔮 Geplant
 
-- [ ] **Scraper-Implementierung**: Spezifische Scraper für Venues
 - [ ] **Smart Deduplication**: Automatische Duplikat-Erkennung
-- [ ] **Filter**: Bulk-Operations mit Filtern
-- [ ] **Validation**: JSON Schema für Event-Struktur
-- [ ] **Export**: CSV, iCal, andere Formate
+- [ ] **Filter-Optionen**: Erweiterte Suche & Filter
+- [ ] **JSON Schema**: Event-Struktur validieren
+- [ ] **Export**: CSV, iCal für Kalender
+- [ ] **Bewertungen**: Community-Feedback zu Events
 
 ## 📚 Dokumentation
 
-- **[CLI Kommandoreferenz](cli/README.md)**: Alle Commands, Workflows, Best Practices
-- **[Getting Started](docs/01-GETTING_STARTED.md)**: Detaillierte Einführung
-- **[CONTRIBUTING](CONTRIBUTING.md)**: Wie du beitragen kannst
+**Neu organisiert! 🎉** Die Dokumentation ist jetzt auf drei Zielgruppen aufgeteilt:
+
+### 👥 Ich bin...
+
+**🛠️ Entwickler/in**
+→ **[ENTWICKLER.md](ENTWICKLER.md)**
+- Setup & Installation
+- CLI-Tools & Scraper-Framework
+- Testing, CI/CD, Debugging
+
+**📝 Redakteur/in oder Admin**
+→ **[REDAKTION.md](REDAKTION.md)**
+- Event-Moderation & Review
+- Telegram-Submissions prüfen
+- Content-Management
+
+**🎉 Benutzer/in**
+→ **[BENUTZER.md](BENUTZER.md)**
+- Karte nutzen & Events entdecken
+- Events einreichen via Telegram
+- Favoriten & Tipps
+
+### 📦 Weitere Ressourcen
+
+- **[FEATURE_REGISTRY.md](FEATURE_REGISTRY.md)**: Vollständige Feature-Liste mit Status
+- **[CONTRIBUTING.md](CONTRIBUTING.md)**: Contribution Guidelines
+- **[docs/](docs/)**: Technische Details & Archiv
 
 ## 🛠️ Projekt-Struktur
 
 ```
-krawl.foundation/
-├── cli/                      # CLI-Tool
-│   ├── event_scraper.py      # Haupt-CLI Script
-│   └── README.md             # Kommandoreferenz
-├── tests/                    # Unit Tests
-│   └── test_event_scraper.py
-├── _events/                  # Event-Dateien (JSON/Markdown)
-├── _data/                    # Zusätzliche Daten
-├── scripts/                  # Setup & Dev Scripts
-│   └── setup.sh
-├── .github/workflows/        # GitHub Actions
-│   ├── scrape-events.yml     # Auto-Scraping
-│   └── test.yml              # Tests
-└── requirements.txt          # Python Dependencies
+KRaWL> Foundation/
+├── cli/                        # CLI-Tools
+│   ├── event_scraper.py        # Event-Management (list, diff, merge, bulk)
+│   ├── image_extractor.py      # OCR & Social Media Extraction
+│   ├── voice_transcriber.py    # Spracherkennung (VOSK)
+│   └── scrapers/               # Scraper-Framework
+├── tests/                      # Unit Tests (pytest)
+├── _events/                    # Event-Dateien (JSON/Markdown)
+├── assets/                     # CSS, JS, Bilder
+│   ├── css/map.scss            # Map-Styling
+│   └── js/map.js               # Map-Interaktionen
+├── scripts/                    # Setup & Dev Scripts
+│   ├── setup.sh                # One-Command Setup
+│   └── telegram_bot.py         # Telegram Bot
+├── .github/workflows/          # GitHub Actions (CI/CD)
+├── index.html                  # Startseite
+├── map.html                    # Interaktive Karte
+├── dashboard.html              # Admin Dashboard
+├── ENTWICKLER.md               # Entwickler-Doku
+├── REDAKTION.md                # Redaktions-Doku
+└── BENUTZER.md                 # Benutzer-Doku
 ```
 
-## 🎓 Workflows
+## 🎓 Beispiele
 
-### Event scrapen und vergleichen
+### Für User: Events einreichen
 
-```bash
-# 1. Von URL scrapen (wenn implementiert)
-./cli/event_scraper.py scrape https://venue.com/events -o new.json
-
-# 2. Mit existierendem Event vergleichen
-./cli/event_scraper.py diff _events/existing.json new.json
-
-# 3. Selektiv mergen (nur bestimmte Felder)
-./cli/event_scraper.py merge _events/existing.json new.json \
-  -f title,date,venue -o _events/existing.json
+```
+1. Öffne Telegram Bot: t.me/krawlfoundation_bot
+2. Sende Flyer-Foto
+3. Fertig! ✨
 ```
 
-### Test-Daten generieren
+### Für Redaktion: Events freigeben
 
 ```bash
-# 50 Test-Events für Development
+# Drafts anzeigen
+./cli/event_scraper.py list | grep draft
+
+# Auf "reviewed" setzen
+./cli/event_scraper.py bulk --set-field status reviewed
+```
+
+### Für Entwickler: Test-Daten
+
+```bash
+# 50 Test-Events generieren
 ./cli/event_scraper.py generate -n 50
 
-# Nach Typ
-./cli/event_scraper.py generate --type concert -n 25
-./cli/event_scraper.py generate --type exhibition -n 25
+# Events vergleichen
+./cli/event_scraper.py diff event1.json event2.json
 ```
 
-### Bulk-Update
+## 🤖 Automatisierung
 
+**GitHub Actions sorgen für immer aktuelle Events:**
+
+- ⏰ **Auto-Scraping**: Alle 12 Stunden (3am & 3pm UTC)
+- 📸 **Telegram Processing**: Sofort bei Upload
+- 🔔 **Draft Alerts**: Alle 6 Stunden für wartende Drafts
+- 🚀 **Deploy**: Automatisch bei Push auf `main`
+
+**Manuell triggern:**
 ```bash
-# Dry-Run: Was würde passieren?
-./cli/event_scraper.py bulk --set-field status published --dry-run
-
-# Tatsächlich ausführen
-./cli/event_scraper.py bulk --set-field status published
+gh workflow run scrape-events.yml -f event_count=5
 ```
 
-## 🤖 GitHub Actions
-
-### Manual Trigger
-
-1. Gehe zu **Actions** → **Scrape Events**
-2. Klicke **Run workflow**
-3. Optional: URL eingeben oder Test-Events generieren
-
-### Automatisch
-
-- Jeden Montag um 8:00 Uhr (konfigurierbar in `.github/workflows/scrape-events.yml`)
+Details: **[ENTWICKLER.md](ENTWICKLER.md)** → GitHub Actions
 
 ## 🧪 Testing
 

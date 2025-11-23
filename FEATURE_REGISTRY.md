@@ -1,6 +1,6 @@
-# 🎯 Feature Registry - krawl.foundation
+# 🎯 Feature Registry - KRaWL> Foundation
 
-**Single Source of Truth für alle aktiven Features im Event-Scraper.**
+**Single Source of Truth für alle aktiven Features in KRaWL> Foundation.**
 
 ---
 

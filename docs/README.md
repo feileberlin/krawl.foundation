@@ -1,45 +1,56 @@
-# 📚 Documentation Directory
+# 📚 KRaWL> Foundation – Dokumentation
 
-Dieser Ordner enthält die **technische Dokumentation** des Projekts.
+Willkommen! 🎉 Die Dokumentation wurde neu organisiert und ist jetzt auf **drei Zielgruppen** aufgeteilt.
 
-## 📂 Struktur (geplant)
+## 🎯 Dokumentation für deine Rolle
+
+### 👥 Ich bin...
+
+**🛠️ Entwickler/Entwicklerin**
+→ **[ENTWICKLER.md](../ENTWICKLER.md)**
+- Setup, Installation, Architektur
+- CLI-Tools, Scraper-Framework
+- Testing, CI/CD, Debugging
+- Feature-Entwicklung
+
+**📝 Redakteur/in oder Admin**
+→ **[REDAKTION.md](../REDAKTION.md)**
+- Event-Moderation & Review
+- Telegram-Submissions prüfen
+- Bulk-Operationen
+- Content-Management
+
+**🎉 Benutzer/in oder Power User**
+→ **[BENUTZER.md](../BENUTZER.md)**
+- Karte nutzen, Events entdecken
+- Events einreichen (Telegram)
+- Favoriten & Merkliste
+- Tipps & Tricks
+
+## 📦 Weitere Ressourcen
+
+- **[FEATURE_REGISTRY.md](../FEATURE_REGISTRY.md)**: Vollständige Feature-Liste mit Status
+- **[CONTRIBUTING.md](../CONTRIBUTING.md)**: Wie du zum Projekt beitragen kannst
+- **[README.md](../README.md)**: Projekt-Übersicht
+
+## 🗂️ Alte Dokumentation
+
+Die vorherige, detaillierte Dokumentation wurde ins Archiv verschoben:
 
 ```
-docs/
-├── README.md                  # Diese Datei
-├── 01-GETTING_STARTED.md      # Erste Schritte
-├── 02-DATA_MODEL.md           # Datenmodell & Schemas
-├── 03-ARCHITECTURE.md         # System-Architektur
-├── 04-DEBUGGING.md            # Fehlersuche & Logs
-├── 05-TESTING.md              # Tests schreiben & ausführen
-├── 06-DEPLOYMENT.md           # GitHub Pages Setup
-├── 07-CUSTOMIZATION.md        # Anpassungen (Themes, Texte)
-├── 08-RECURRING_EVENTS.md     # Wiederkehrende Events (v2.0)
-└── 99-FEDERATION.md           # ActivityPub (v2.0+)
+docs/archive/
+├── 01-GETTING_STARTED.md      # Erste Schritte (alt)
+├── PROJECT_SUMMARY.md          # Projekt-Zusammenfassung
+├── WORKFLOWS.md                # GitHub Actions Details
+├── TELEGRAM_SUBMISSIONS.md     # Telegram Bot Setup
+├── SECRETS.md                  # Secrets Management
+├── MAP_THEME_STATUS.md         # Map Theme Status
+├── EVENT_MAP.md                # Event Map Details
+└── CHAT_EXPORT_GUIDE.md        # Chat Export Guide
 ```
 
-## 🎯 Zielgruppen
-
-### Einsteiger (Getting Started)
-
-- **01-GETTING_STARTED.md**: Installation, erster Event, Dev-Server
-- **02-DATA_MODEL.md**: Was sind Events, Venues, Categories?
-- **07-CUSTOMIZATION.md**: Farben, Texte, Logo ändern
-
-### Entwickler (Advanced)
-
-- **03-ARCHITECTURE.md**: Jekyll, Liquid, Build-Prozess
-- **04-DEBUGGING.md**: Logs, Fehlersuche, Troubleshooting
-- **05-TESTING.md**: Unit-Tests, Integration-Tests
-
-### Admins (Operations)
-
-- **06-DEPLOYMENT.md**: GitHub Pages, Custom Domain, SSL
-- **08-RECURRING_EVENTS.md**: Regelmäßige Events (Serien)
-
-### Zukunft (Roadmap)
-
-- **99-FEDERATION.md**: Dezentrale Event-Aggregation (ActivityPub)
+**Warum archiviert?**
+Die neue Dokumentation ist schlanker, besser organisiert und auf die jeweilige Zielgruppe zugeschnitten. Die alten Dateien bleiben als Referenz erhalten.
 
 ## 📝 Dokumentations-Prinzipien
 

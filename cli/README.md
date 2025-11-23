@@ -1,4 +1,4 @@
-# CLI Tools - krawl.foundation
+# CLI Tools - KRaWL> Foundation
 
 Command-line tools für Event-Scraping, OCR und Datenmanagement.
 
